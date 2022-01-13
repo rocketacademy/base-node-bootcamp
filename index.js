@@ -16,7 +16,7 @@ const handleFileRead = (error, content) => {
       // get index for start of color code
       const startOfColor = separateIntoLines[i].indexOf('#');
       // get index for end of color code, w/o ;
-      const endOfColor = separateIntoLines[i].length - 1;
+      const endOfColor = startOfColor + 6;
       const color = separateIntoLines[i].slice(startOfColor, endOfColor);
       // check if color exists in object, and adds to color if it does
       if (color in occurences) {
