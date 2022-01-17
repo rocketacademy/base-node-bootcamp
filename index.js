@@ -12,7 +12,7 @@ const convertHexToRGB = (hex) => {
 };
 
 const file = process.argv[2];
-
+//
 const handleReadFile = (err, content) => {
   if (err) {
     console.log('read error', err);
