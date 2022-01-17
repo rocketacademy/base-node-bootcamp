@@ -25,14 +25,15 @@ const handleReadFile = (err, content) => {
     // returns false or indexNo of #
     const hexIndexNo = checkHexInLine(lines[i]);
     // console.log(hexIndexNo);
+    if (!hexIndexNo) {
+      console.log(lines[i]);
+      newLine += lines[i];
+    }
     if (hexIndexNo) {
       const hexNo = lines[i].slice(hexIndexNo, lines[i].length - 2);
       const convertToRGB = convertHexToRGB(hexNo);
       const { r, g, b } = convertToRGB;
       newLine += `background-color: rgb(${r}, ${g}, ${b})\n`;
-    }
-    if (!hexIndexNo) {
-      newLine += lines[i];
     }
   }
   console.log(newLine);
