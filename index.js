@@ -12,12 +12,8 @@ const convertHexToRGB = (hex) => {
 };
 
 const file = process.argv[2];
-//
-const handleReadFile = (err, content) => {
-  if (err) {
-    console.log('read error', err);
-  }
-  // convert file into individual lines
+
+const addConvertedLines = (content) => {
   const lines = content.split('\n');
   // loop through each line and check for hex color code
   let newLine = '';
@@ -32,10 +28,21 @@ const handleReadFile = (err, content) => {
       newLine += `background-color: rgb(${r}, ${g}, ${b})\n`;
     }
     if (!hexIndexNo) {
-      newLine += lines[i];
+      newLine += `${lines[i]}\n`;
     }
   }
-  console.log(newLine);
+  return newLine;
+};
+
+const handleReadFile = (err, content) => {
+  if (err) {
+    console.log('read error', err);
+  }
+  // convert file into individual lines
+
+  const newContent = addConvertedLines(content);
+
+  console.log(newContent);
 };
 
 const checkHexInLine = (content) => {
