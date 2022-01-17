@@ -22,24 +22,20 @@ const handleReadFile = (err, content) => {
   // loop through each line and check for hex color code
   let newLine = '';
   for (let i = 0; i < lines.length; i += 1) {
-    // if (lines[i].indexOf('#') !== -1) {
-    // }
-    // console.log(lines[i]);
+    // returns false or indexNo of #
     const hexIndexNo = checkHexInLine(lines[i]);
     // console.log(hexIndexNo);
-    console.log(lines[i]);
     if (hexIndexNo) {
       const hexNo = lines[i].slice(hexIndexNo, lines[i].length - 2);
       const convertToRGB = convertHexToRGB(hexNo);
-      // console.log(convertToRGB);
       const { r, g, b } = convertToRGB;
-      newLine += `background-color: rgb(${r}, ${g}, ${b})`;
+      newLine += `background-color: rgb(${r}, ${g}, ${b})\n`;
     }
-    //  else if (!hexIndexNo) {
-    //   newLine += lines[i];
-    // }
+    if (!hexIndexNo) {
+      newLine += lines[i];
+    }
   }
-  // console.log(newLine);
+  console.log(newLine);
 };
 
 const checkHexInLine = (content) => {
