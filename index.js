@@ -14,6 +14,7 @@ const convertHexToRGB = (hex) => {
 const file = process.argv[2];
 
 const addConvertedLines = (content) => {
+  // convert file into individual lines
   const lines = content.split('\n');
   // loop through each line and check for hex color code
   let newLine = '';
@@ -38,11 +39,12 @@ const handleReadFile = (err, content) => {
   if (err) {
     console.log('read error', err);
   }
-  // convert file into individual lines
-
   const newContent = addConvertedLines(content);
-
-  console.log(newContent);
+  writeFile(file, newContent, (err) => {
+    if (err) {
+      console.log('write error', err);
+    }
+  });
 };
 
 const checkHexInLine = (content) => {
