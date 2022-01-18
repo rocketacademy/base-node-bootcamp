@@ -1,5 +1,3 @@
-//////// Conversion Functions /////////
-
 // HEX to RGB conversion
 export const convertHexToRGB = (hex) => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -21,4 +19,13 @@ export function rgbToHex(r, g, b) {
   return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 // alert(rgbToHex(0, 51, 255)); // #0033ff
-////////////////////////////////////////
+
+// convert rgb to hex
+export const convertRGBText = (content) => {
+  let numbers = content.slice(1, content.length - 1); // slicing string returns string
+  const numberList = numbers.split(','); // returns an array
+  const [r, g, b] = toNumber(numberList);
+  return rgbToHex(r, g, b);
+};
+
+const toNumber = (array) => array.map(Number);
