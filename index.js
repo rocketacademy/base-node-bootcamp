@@ -1,2 +1,2 @@
 const bumble = process.argv[2];
-console.log(`good day ${bumble}, are you well?`);
+console.log(`yo ${bumble}, what's up dude.`);
