@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'New Task'}); %>
+  <body>
+    <%- include('navbar') %>
+    <div class="container-fluid">
+      <div class="row flex-nowrap min-vh-100 h-auto">
+        <%- include('sidebar') %>
+        <div class="col-9 col-sm-9 col-xl-10 py-3 bg-light">
+          <div class="container">
+            <div class="row mb-3">
+              <div class="display-3 text-warning">Team Mates</div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-12">
+                <button
+                  type="button"
+                  class="btn btn-warning mt-3"
+                  data-bs-toggle="modal"
+                  data-bs-target="#addfriends"
+                >
+                  Add Friends
+                </button>
+
+                <!-- Modal for editting profile  -->
+                <div
+                  class="modal fade"
+                  id="addfriends"
+                  tabindex="-1"
+                  aria-labelledby="addfriends"
+                  aria-hidden="true"
+                >
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title lead" id="addfriends">
+                          Add Friends
+                        </h5>
+                        <button
+                          type="button"
+                          class="btn-close"
+                          data-bs-dismiss="modal"
+                          aria-label="Close"
+                        ></button>
+                      </div>
+                      <form
+                        action="/teammates/add"
+                        method="POST"
+                        class="needs-validation"
+                        novalidate
+                      >
+                        <div class="modal-body">
+                          <div class="col-12 lead fs-6 mb-3">
+                            Add user as a team mate. Enter email of the user you
+                            want to add.
+                          </div>
+                          <label
+                            for="sendeeemail"
+                            class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                            >Email</label
+                          >
+
+                          <input
+                            type="text"
+                            class="form-control lead fs-6"
+                            id="sendeeemail"
+                            name="sendeeemail"
+                            required
+                          />
+                        </div>
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            Close
+                          </button>
+                          <button
+                            type="submit"
+                            class="btn btn-warning lead fs-6"
+                          >
+                            Submit
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% if(friends.length === 0) { %>
+            <div class="row mb-3">
+              <div
+                class="lead text-warning col-12 d-flex justify-content-center"
+              >
+                <img
+                  src="/noteam.png"
+                  alt="no friends yet"
+                  width="75%"
+                  height="auto"
+                  alt="300"
+                />
+              </div>
+            </div>
+
+            <% } else { %>
+            <div class=" row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+              <% friends.forEach((friend) => { %>
+              <div class="col">
+                <div class="card shadow p-3 mb-5 bg-body rounded">
+                  <% if(friend.photo === null) { %>
+                  <img
+                    src="/friend.jpg"
+                    class="card-img-top"
+                    alt="friend photo"
+                  />
+                  <% } else { %>
+                  <img
+                    src="/<%= friend.photo %>"
+                    class="card-img-top"
+                    alt="friend photo"
+                  />
+                  <% } %>
+                  <div class="card-body">
+                    <h5 class="card-title lead text-capitalize">
+                      <%= friend.name %>
+                    </h5>
+                    <form
+                      action="/teammates/<%= friend.friend_id %>?_method=DELETE"
+                      method="POST"
+                    >
+                      <div class="d-grid col-12 mx-auto">
+                        <button type="submit" class="btn btn-outline-secondary">
+                          Unfriend
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <% }) %> <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include('footer') %>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+<ul class="nav nav-tabs bg-warning bg-opacity-50">
+  <li class="nav-item dropdown">
+    <a
+      class="nav-link dropdown-toggle text-decoration-none text-black"
+      data-bs-toggle="dropdown"
+      href="#"
+      role="button"
+      aria-expanded="false"
+    >
+      <% if(navbar.photo === null){ %>
+      <img
+        src="/user.png"
+        alt="user picture"
+        class="rounded-circle"
+        width="24"
+        height="24"
+      />
+      <% } else { %>
+      <img
+        src="/<%= navbar.photo %>"
+        alt="user picture"
+        class="rounded-circle"
+        width="24"
+        height="24"
+      />
+
+      <% } %>
+
+      <span class="text-secondary lead fs-6 text-capitalize"
+        ><%= navbar.name %></span
+      >
+    </a>
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item lead fs-6 text-warning" href="/profile"
+          >Profile</a
+        >
+      </li>
+      <li>
+        <a class="dropdown-item lead fs-6 text-warning" href="/teammates"
+          >Team Mates</a
+        >
+      </li>
+      <li>
+        <a class="dropdown-item lead fs-6 text-warning" href="/logout"
+          >Logout</a
+        >
+      </li>
+    </ul>
+  </li>
+</ul>

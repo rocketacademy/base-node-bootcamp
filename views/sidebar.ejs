@@ -1,0 +1,65 @@
+<div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-secondary rounded-end">
+  <div
+    class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white"
+  >
+    <ul
+      class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start"
+      id="menu"
+    >
+      <li>
+        <a
+          href="#submenu"
+          data-bs-toggle="collapse"
+          class="nav-link px-0 align-middle text-decoration-none text-white"
+        >
+          <i class="fs-5 bi bi-journals"></i>
+          <span class="ms-1 d-none d-sm-inline lead fs-6">Projects</span>
+        </a>
+        <ul
+          class="collapse show nav flex-column ms-1"
+          id="submenu"
+          data-bs-parent="#menu"
+        >
+          <li class="w-100">
+            <a
+              href="/projects/"
+              class="nav-link px-0 text-decoration-none text-warning"
+            >
+              <i class="fs-5 bi bi-journal-text"></i>
+              <span class="d-none d-sm-inline lead fs-6">All Projects</span>
+            </a>
+          </li>
+          <li class="w-100">
+            <a
+              href="/projects/add"
+              class="nav-link px-0 text-decoration-none text-warning"
+            >
+              <i class="fs-5 bi bi-journal-plus"></i>
+              <span class="d-none d-sm-inline lead fs-6">Add Project</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <li>
+        <a
+          href="/tasks/all"
+          class="nav-link px-0 align-middle text-decoration-none text-white"
+        >
+          <i class="fs-5 bi bi-app-indicator"></i>
+          <span class="ms-1 d-none d-sm-inline lead fs-6">All Tasks</span></a
+        >
+      </li>
+      <li>
+        <a
+          href="/inbox"
+          class="nav-link px-0 align-middle text-decoration-none text-white"
+        >
+          <i class="fs-5 bi bi-envelope"></i>
+          <span class="ms-1 d-none d-sm-inline lead fs-6">Inbox</span></a
+        >
+      </li>
+    </ul>
+    <hr />
+  </div>
+</div>

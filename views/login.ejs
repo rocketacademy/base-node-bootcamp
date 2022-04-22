@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'Starter Page'}); %>
+  <body>
+    <div class="container-fluid">
+      <div
+        class="container-fluid justify-content-end align-items-md-center min-vh-100 h-auto d-flex bg-image-phone"
+      >
+        <div class="col-12 col-md-8 bg-image align-self-stretch"></div>
+        <div class="col-12 col-md-4">
+          <form action="/" method="POST" class="needs-validation" novalidate>
+            <div class="container p-3">
+              <div class="row mb-3 display-3">
+                Welcome to TasksTogether
+              </div>
+              <div class="row mb-3">
+                <label
+                  for="email"
+                  class="col-sm-12 text-capitalize col-form-label"
+                  >Email</label
+                >
+                <div class="col-sm-12">
+                  <input
+                    type="email"
+                    class="form-control <%=emailvalid %>"
+                    id="email"
+                    name="email"
+                    required
+                  />
+                  <div class="invalid-feedback">
+                    <%= emailfeedback %>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label
+                  for="password"
+                  class="col-sm-12 text-capitalize col-form-label"
+                  >Password</label
+                >
+                <div class="col-sm-12">
+                  <input
+                    type="password"
+                    class="form-control <%=pwvalid %>"
+                    id="password"
+                    name="password"
+                    required
+                  />
+                  <div class="invalid-feedback">
+                    <%= pwfeedback %>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row-mb-3 mt-5">
+                <a href="/signup" class="text-warning">
+                  No Account! Signup for Account</a
+                >
+              </div>
+
+              <div class="mt-2 mb-3 row justify-content-start">
+                <div class="d-grid jusitfy-content-start col-6">
+                  <button type="submit" class="btn btn-warning">
+                    Submit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <%- include('footer') %>
+  </body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'New Task'}); %>
+  <body>
+    <%- include('navbar') %>
+    <div class="container-fluid">
+      <div class="row flex-nowrap min-vh-100 h-auto">
+        <%- include('sidebar') %>
+        <div class="col-9 col-sm-9 col-xl-10 py-3 bg-light">
+          <div class="container h-100">
+            <br />
+            <div class="row mb-5">
+              <div class="display-3 text-warning">Profile</div>
+            </div>
+            <div class="row mb-5">
+              <div class="d-flex justify-content-center">
+                <% if(user.photo === null){ %>
+                <img
+                  src="/user.png"
+                  alt="user picture"
+                  class="rounded-circle"
+                  width="200px"
+                  height="200px"
+                />
+                <% } else { %>
+                <img
+                  src="/<%= user.photo %>"
+                  alt="user picture"
+                  class="rounded-circle"
+                  width="200px"
+                  height="200px"
+                />
+
+                <% } %>
+
+                <span>
+                  <button
+                    type="button"
+                    class="btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#exampleModal"
+                  >
+                    <i class="bi bi-pencil-square fs-5 text-secondary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+            <!-- Modal for changign profile photo -->
+            <div
+              class="modal fade"
+              id="exampleModal"
+              tabindex="-1"
+              aria-labelledby="exampleModalLabel"
+              aria-hidden="true"
+            >
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title lead" id="exampleModalLabel">
+                      Edit Photo
+                    </h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                    ></button>
+                  </div>
+                  <form
+                    action="/user/<%= user.id %>/photo"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    class="needs-validation"
+                    novalidate
+                  >
+                    <div class="modal-body">
+                      <label for="photo" class="col-12">
+                        Upload new profile photo:</label
+                      ><br />
+                      <input
+                        type="file"
+                        class="form-control col-12"
+                        name="photo"
+                      />
+                    </div>
+                    <div class="modal-footer">
+                      <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                      >
+                        Close
+                      </button>
+                      <button type="submit" class="btn btn-warning lead fs-6">
+                        Submit
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="row shadow p-5 mt-4 mb-3 bg-body rounded">
+              <div class="row">
+                <div class="col-sm-2 lead mb-3 fs-6 text-black">Name:</div>
+                <div class="col-sm-9 text-capitalize lead fs-6 text-start">
+                  <%= user.name %>
+                </div>
+
+                <div class="col-sm-2 lead mb-3 fs-6 text-black">Email:</div>
+                <div class="col-sm-9 text-start lead fs-6">
+                  <%= user.email %>
+                </div>
+
+                <div class="col-sm-2 lead fs-6 mb-3 text-black">
+                  Contact:
+                </div>
+
+                <div class="col-sm-9 text-start lead fs-6">
+                  <%= user.contact %>
+                </div>
+
+                <div class="col-sm-2 lead fs-6 mb-3 text-black">Job Role:</div>
+
+                <div class="col-sm-9 text-start lead fs-6">
+                  <%= user.role %>
+                </div>
+
+                <div class="col-sm-2 lead fs-6 mb-3 text-black">Workplace:</div>
+
+                <div class="col-sm-9 text-start lead fs-6">
+                  <%= user.workplace %>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-outline-warning mt-3"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editprofilemodal"
+                >
+                  Edit Profile
+                </button>
+
+                <!-- Modal for editting profile  -->
+                <div
+                  class="modal fade"
+                  id="editprofilemodal"
+                  tabindex="-1"
+                  aria-labelledby="editprofilemodal"
+                  aria-hidden="true"
+                >
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title lead" id="editprofilemodal">
+                          Edit Profile
+                        </h5>
+                        <button
+                          type="button"
+                          class="btn-close"
+                          data-bs-dismiss="modal"
+                          aria-label="Close"
+                        ></button>
+                      </div>
+                      <form
+                        action="/user/<%= user.id %>?_method=PUT"
+                        method="POST"
+                        class="needs-validation"
+                        novalidate
+                      >
+                        <div class="modal-body">
+                          <%- include('editprofile') %>
+                        </div>
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            Close
+                          </button>
+                          <button
+                            type="submit"
+                            class="btn btn-warning lead fs-6"
+                          >
+                            Submit
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include('footer') %>
+  </body>
+</html>

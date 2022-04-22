@@ -1,0 +1,50 @@
+[
+  Result {
+    command: 'SELECT',
+    rowCount: 1,
+    oid: null,
+    rows: [ [Object] ],
+    fields: [
+      [Field], [Field],
+      [Field], [Field],
+      [Field], [Field],
+      [Field]
+    ],
+    _parsers: [
+      [Function: parseInteger],
+      [Function: noParse],
+      [Function: noParse],
+      [Function: noParse],
+      [Function: noParse],
+      [Function: parseInteger],
+      [Function: parseInteger]
+    ],
+    _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+    RowCtor: null,
+    rowAsArray: false
+  },
+  Result {
+    command: 'SELECT',
+    rowCount: 2,
+    oid: null,
+    rows: [ [Object], [Object] ],
+    fields: [
+      [Field], [Field],
+      [Field], [Field],
+      [Field], [Field],
+      [Field]
+    ],
+    _parsers: [
+      [Function: parseInteger],
+      [Function: noParse],
+      [Function: noParse],
+      [Function: noParse],
+      [Function: parseInteger],
+      [Function: parseInteger],
+      [Function: parseInteger]
+    ],
+    _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+    RowCtor: null,
+    rowAsArray: false
+  }
+]

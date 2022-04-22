@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'Signup'}); %>
+  <body>
+    <div class="container-fluid">
+      <div
+        class="container-fluid justify-content-end align-items-md-center min-vh-100 h-auto d-flex bg-image-phone"
+      >
+        <div class="col-12 col-sm-8 bg-image align-self-stretch"></div>
+        <div class="col-12 col-sm-4">
+          <p class="display-3 text-main">
+            Signup For Account
+          </p>
+          <form
+            action="/signup"
+            method="POST"
+            class="needs-validation"
+            novalidate
+          >
+            <br />
+            <br />
+            <div class="container p-3">
+              <div class="row mb-3">
+                <label
+                  for="name"
+                  class="col-sm-12 text-capitalize col-form-label"
+                  >Username</label
+                >
+                <div class="col-sm-12">
+                  <input
+                    type="name"
+                    class="form-control"
+                    id="name"
+                    name="name"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label
+                  for="email"
+                  class="col-sm-12 text-capitalize col-form-label"
+                  >Email</label
+                >
+                <div class="col-sm-12">
+                  <input
+                    type="email"
+                    class="form-control <%=emailvalid %>"
+                    id="email"
+                    name="email"
+                    required
+                  />
+                  <div class="invalid-feedback">
+                    <%= emailfeedback %>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label
+                  for="password"
+                  class="col-sm-12 text-capitalize col-form-label"
+                  >Password</label
+                >
+                <div class="col-sm-12">
+                  <input
+                    type="password"
+                    class="form-control <%=pwvalid %>"
+                    id="password"
+                    name="password"
+                    required
+                  />
+                  <div class="invalid-feedback">
+                    <%= pwfeedback %>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row-mb-3 mt-5">
+                <a href="/" class="text-warning">
+                  Already have an account, Sign in!</a
+                >
+              </div>
+
+              <div class="mt-2 mb-3 row justify-content-start">
+                <div class="d-grid jusitfy-content-start col-sm-6">
+                  <button type="submit" class="btn btn-warning">
+                    Submit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <%- include('footer') %>
+  </body>
+</html>

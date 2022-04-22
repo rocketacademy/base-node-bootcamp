@@ -1,0 +1,15 @@
+@media only screen and (min-width: 768px) {
+  .bg-image {
+    background-image: url("./starter-background.jpg");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  .bg-image-phone {
+    background-image: url("./starter-background-phone.jpg");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+  }
+}

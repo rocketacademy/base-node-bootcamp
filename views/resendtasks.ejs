@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'New Task'}); %>
+  <body>
+    <%- include('navbar') %>
+    <div class="container-fluid">
+      <div class="row flex-nowrap min-vh-100 h-auto">
+        <%- include('sidebar') %>
+        <div class="col-9 col-sm-9 col-xl-10 py-3">
+          <div class="container mb-3">
+            <% if(task.accept === 'accepted') { %>
+            <br />
+            <div class="row mb-3 display-3 text-warning">
+              Task
+            </div>
+            <br />
+
+            <div class="row shadow p-3 mb-3 bg-body rounded">
+              <div class="container lead fs-6">
+                <div>
+                  You have sent
+                  <span class="text-warning"><%= task.email %> </span> a request
+                  to accept the task below.The user has accepted your request
+                  and has begun on their task! <i></i>
+                </div>
+
+                <dl class="row p-3">
+                  <dt class="col-sm-3 text-secondary">Name</dt>
+                  <dd class="col-sm-9 text-capitalize">
+                    <%= task.name %>
+                  </dd>
+
+                  <dt class="col-sm-3 text-secondary ">Due Date</dt>
+                  <dd class="col-sm-9">
+                    <%= task.due_date %>
+                  </dd>
+
+                  <dt class="col-sm-3 mb-0 text-secondary ">Status</dt>
+                  <dd
+                    class="col-sm-9 mb-0 text-capitalize text-success fw-bold"
+                  >
+                    <%= task.accepted %>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+
+            <% } else { %>
+            <br />
+            <div class="row mb-3 display-3 text-warning">
+              Task
+            </div>
+            <br />
+
+            <% if(task.accepted ==="no" || task.accepted === "accepted") { %>
+            <div
+              class="row shadow p-3 mb-3 rounded alert alert-success"
+              role="alert"
+            >
+              Request has been sent resent!
+            </div>
+            <% } %>
+            <div class="row shadow p-3 mb-3 bg-body rounded">
+              <div class="container">
+                <div>
+                  The user
+                  <span class="text-warning"><%= task.email %> </span>
+                  has <span class="fw-bold">rejected</span> your request to
+                  accept the task below. Please select if you would like to
+                  resend the task or delete the task.
+                </div>
+
+                <dl class="row p-3">
+                  <dt class="col-sm-3 text-secondary">Name</dt>
+                  <dd class="col-sm-9 text-capitalize">
+                    <%= task.name %>
+                  </dd>
+
+                  <dt class="col-sm-3 text-secondary ">Due Date</dt>
+                  <dd class="col-sm-9">
+                    <%= task.due_date %>
+                  </dd>
+
+                  <dt class="col-sm-3 mb-0 text-secondary ">Status</dt>
+                  <dd class="col-sm-9 mb-0 text-capitalize text-danger">
+                    <%= task.accept %>
+                  </dd>
+                </dl>
+
+                <% if(task.accepted ==="no" || task.accepted==="accepted") { %>
+                <div class="row mb-3">
+                  <div class="col-3">
+                    <div class="d-grid col-12 mx-auto">
+                      <button type="submit" class="btn btn-warning" disabled>
+                        Delete Task
+                      </button>
+                    </div>
+                  </div>
+                  <div class="col-3">
+                    <div class="d-grid col-12 mx-auto">
+                      <button
+                        type="button"
+                        class="btn btn-warning"
+                        data-bs-toggle="modal"
+                        data-bs-target="#exampleModal"
+                        disabled
+                      >
+                        Resend Task
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <% } else { %>
+                <div class="row mb-3">
+                  <div class="col-3">
+                    <form
+                      action="/task/<%= task.taskid %>?_method=DELETE"
+                      method="POST"
+                    >
+                      <div class="d-grid col-12 mx-auto">
+                        <button type="submit" class="btn btn-warning">
+                          Delete Task
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="col-3">
+                    <div class="d-grid col-12 mx-auto">
+                      <button
+                        type="button"
+                        class="btn btn-warning"
+                        data-bs-toggle="modal"
+                        data-bs-target="#exampleModal"
+                      >
+                        Resend Task
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <% } %>
+              </div>
+            </div>
+            <!-- Modal -->
+            <div
+              class="modal fade"
+              id="exampleModal"
+              tabindex="-1"
+              aria-labelledby="exampleModalLabel"
+              aria-hidden="true"
+            >
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title lead" id="exampleModalLabel">
+                      Resend Task
+                      <span class="text-warning text-capitalize"
+                        ><%= task.name %>
+                      </span>
+                    </h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                    ></button>
+                  </div>
+
+                  <form
+                    action="/task/<%= task.taskid %>/response?_method=PUT"
+                    method="POST"
+                    class="needs-validation"
+                    novalidate
+                  >
+                    <div class="modal-body">
+                      <div class="col-12 lead fs-6">
+                        Send the task to a new user! Insert the new user:
+                      </div>
+                      <div class="col-12">
+                        <label
+                          for="sendeeemail"
+                          class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                          >Email</label
+                        >
+
+                        <input
+                          type="text"
+                          class="form-control lead fs-6"
+                          id="sendeeemail"
+                          name="sendeeemail"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                      >
+                        Close
+                      </button>
+                      <button type="submit" class="btn btn-warning lead fs-6">
+                        Submit
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include('footer') %>
+  </body>
+</html>

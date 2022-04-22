@@ -3,3 +3,6 @@
 
 # Dependency directories
 node_modules/
+
+# Photos uploaded by user
+uploads/*

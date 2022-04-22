@@ -1,0 +1,50 @@
+          <div class="col-12 mb-3 lead text-secondary"><%= tableName %></div>
+              <% if(completedTasks.length === 0) { %>
+              <p>No completed tasks yet!</p>
+              <% } else { %>
+              <table class="table table-bordered table-hover border-success ">
+                <tbody>
+                  <tr class="table-success text-secondary border-success">
+                    <td class="align-middle"></td>
+                    <td class="align-middle">Name</td>
+                    <td class="align-middle">Due Date</td>
+                    <td class="align-middle">Sent By</td>
+                  </tr>
+
+                  <% completedTasks.forEach((task) => { %>
+
+                  <tr>
+                    <% if(task.status ==="pending") { %>
+                    <td class="text-center align-middle">
+                      <a
+                        href="/tasks/all/completed?projId=<%= task.proj_id %>&taskId=<%= task.id %>&taskStatus=completed"
+                        class="text-decoration-none"
+                      >
+                        <i class="fs-4 bi bi-circle text-success"></i>
+                      </a>
+                    </td>
+
+                    <% } else { %>
+                    <td class="text-center align-middle">
+                      <a
+                        href="/tasks/all/completed?projId=<%= task.proj_id %>&taskId=<%= task.id %>&taskStatus=pending"
+                        class="text-decoration-none"
+                      >
+                        <i
+                          class="fs-4 bi bi-check-circle-fill text-success"
+                        ></i>
+                      </a>
+                    </td>
+
+                    <% } %>
+
+                    <td class="align-middle"><%= task.name %></td>
+                    <td class="align-middle"><%= task.due_date %></td>
+                    <td class="align-middle"><%= task.username %></td>
+                  </tr>
+
+                  <% }) %>
+                </tbody>
+              </table>
+              <% } %>
+            </div>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'New Task'}); %>
+  <body>
+    <%- include('navbar') %>
+    <div class="container-fluid">
+      <div class="row flex-nowrap min-vh-100 h-auto">
+        <%- include('sidebar') %>
+        <div class="col-9 col-sm-9 col-xl-10 py-3">
+          <br />
+          <div class="container">
+            <div class="row mb-3">
+              <div class="display-3 text-warning">Project</div>
+            </div>
+            <div class="row mb-3">
+              <div class="lead text-secondary"><%= proj.name %></div>
+            </div>
+          </div>
+          <div
+            class="container shadow p-5 mt-4 mb-5 bg-body rounded h-75 lead fs-6"
+          >
+            <dl class="row">
+              <dt class="col-sm-3 mb-3 lead fs-6">Description:</dt>
+              <dd class="col-sm-9 text-capitalize">
+                <%= proj.description %>
+              </dd>
+
+              <dt class="col-sm-3 mb-3 lead fs-6">Due Date:</dt>
+              <dd class="col-sm-9">
+                <%= proj.due_date %>
+              </dd>
+
+              <dt class="col-sm-3 mb-3 lead fs-6">Status:</dt>
+              <dd class="col-sm-9 text-capitalize">
+                <%= proj.status %>
+              </dd>
+
+              <dt class="col-sm-3 mb-3 lead fs-6">Progress:</dt>
+              <dd class="col-sm-9">
+                <div class="progress">
+                  <div
+                    id="progress"
+                    class="progress-bar bg-success"
+                    role="progressbar"
+                    style="width: <%= proj.progress %>%"
+                    aria-valuenow="25"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                  >
+                    <%= proj.progress %>
+                  </div>
+                </div>
+              </dd>
+            </dl>
+            <div class="row">
+              <div class="row mb-3">
+                <div class="col-12 mb-3 lead text-secondary">
+                  Tasks
+                </div>
+                <% if(tasks.length === 0) { %>
+                <p>No completed tasks yet!</p>
+                <% } else { %>
+                <table class="table table-hover shadow-sm bg-body rounded">
+                  <tbody>
+                    <tr class="table-warning text-secondary border-warning">
+                      <td class="align-middle"></td>
+                      <td class="align-middle">Name</td>
+                      <td class="align-middle">Due Date</td>
+                      <td class="align-middle">In Charge</td>
+                    </tr>
+
+                    <% tasks.forEach((task) => { %>
+
+                    <tr>
+                      <% if(task.status ==="pending") { %>
+                      <td class="text-center align-middle">
+                        <a
+                          href="/tasks/completed?projId=<%= task.proj_id %>&taskId=<%= task.id %>&taskStatus=completed"
+                          class="text-decoration-none"
+                        >
+                          <i class="fs-4 bi bi-circle text-warning"></i>
+                        </a>
+                      </td>
+
+                      <% } else { %>
+                      <td class="text-center align-middle">
+                        <a
+                          href="/tasks/completed?projId=<%= task.proj_id %>&taskId=<%= task.id %>&taskStatus=pending"
+                          class="text-decoration-none"
+                        >
+                          <i
+                            class="fs-4 bi bi-check-circle-fill text-warning"
+                          ></i>
+                        </a>
+                      </td>
+
+                      <% } %>
+
+                      <td class="align-middle"><%= task.name %></td>
+                      <td class="align-middle"><%= task.due_date %></td>
+                      <td class="align-middle"><%= task.username %></td>
+                    </tr>
+
+                    <% }) %>
+                  </tbody>
+                </table>
+                <% } %>
+              </div>
+            </div>
+            <div class="row mb-3 mt-3">
+              <div class="col-sm-4">
+                <div class="d-grid col-12 mx-auto">
+                  <a
+                    class="btn btn-secondary"
+                    href="/projects/<%= proj.id %>/edit"
+                    role="button"
+                    >Edit Project</a
+                  >
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <form
+                  action="/projects/<%= proj.id %>?_method=DELETE"
+                  method="POST"
+                >
+                  <div class="d-grid col-12 mx-auto">
+                    <button type="submit" class="btn btn-secondary">
+                      Delete sighting
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%- include('footer') %>
+  </body>
+</html>

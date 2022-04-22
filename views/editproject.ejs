@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'New Task'}); %>
+  <body>
+    <%- include('navbar') %>
+    <div class="container-fluid">
+      <div class="row flex-nowrap min-vh-100 h-auto">
+        <%- include('sidebar') %>
+        <div class="col-9 col-sm-9 col-xl-10 py-3 bg-light">
+          <div class="container">
+            <br />
+            <div class="row mb-3 display-3 text-warning">
+              Edit Project
+            </div>
+            <div class="container shadow p-5 mt-0 mb-3 bg-body rounded">
+              <form
+                action="/projects/<%= proj.id %>/edit?_method=PUT"
+                method="POST"
+                class="needs-validation"
+                novalidate
+              >
+                <br />
+
+                <div class="row mb-3 lead ">
+                  <label
+                    for="name"
+                    class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                    >Name</label
+                  >
+                  <div class="col-sm-12 col-10">
+                    <input
+                      type="text"
+                      class="form-control lead fs-6"
+                      id="name"
+                      name="name"
+                      value="<%= proj.name %>"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <label
+                    for="description"
+                    class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                    >Description</label
+                  >
+                  <div class="col-sm-12 col-10">
+                    <input
+                      type="text"
+                      class="form-control text-capitalize lead fs-6"
+                      id="description"
+                      name="description"
+                      value="<%= proj.description %>"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <label
+                    for="duedate"
+                    class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                    >Date Due</label
+                  >
+                  <div class="col-sm-12 col-10">
+                    <input
+                      type="datetime-local"
+                      class="form-control lead fs-6"
+                      id="duedate"
+                      name="duedate"
+                      value="<%= proj.formatdate %>"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <br />
+                <div
+                  class="row d-flex justify-content-center shadow-sm p-2 mb-3 bg-body rounded"
+                  id="add_here"
+                >
+                  <div class="row">
+                    <div class="col-12 lead mb-3">
+                      Tasks
+                      <span>
+                        <a
+                          href="#"
+                          id="remove_fields"
+                          class="text-warning btn float-end position-relative"
+                        >
+                          <i class="bi bi-dash-circle "></i>
+                        </a>
+                      </span>
+                      <span>
+                        <a
+                          href="#"
+                          id="add_more_fields"
+                          class="text-warning btn float-end position-relative"
+                        >
+                          <i class="bi bi-plus-circle"></i>
+                        </a>
+                      </span>
+                    </div>
+                  </div>
+
+                  <% tasks.forEach((task) => { %>
+                  <div class="row">
+                    <div class="visually-hidden col-12 col-sm-4">
+                      <label
+                        for="taskId"
+                        class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                      ></label>
+
+                      <input
+                        type="number"
+                        class="form-control lead fs-6"
+                        id="taskId"
+                        name="taskId"
+                        value="<%= task.task_id %>"
+                      />
+                    </div>
+
+                    <div class="col-12 col-sm-4">
+                      <label
+                        for="tname"
+                        class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                        >Name</label
+                      >
+
+                      <input
+                        type="text"
+                        class="form-control lead fs-6"
+                        id="tname"
+                        name="tname"
+                        value="<%= task.name %>"
+                        required
+                      />
+                    </div>
+                    <div class="col-12 col-sm-4">
+                      <label
+                        for="taskduedate"
+                        class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                        >Due Date</label
+                      >
+
+                      <input
+                        type="datetime-local"
+                        class="form-control lead fs-6"
+                        id="taskduedate"
+                        name="taskduedate"
+                        value="<%= task.formatdate %>"
+                        required
+                      />
+                    </div>
+                    <div class="col-12 col-sm-4 mb-3">
+                      <label
+                        for="sendeeemail"
+                        class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                        >Email</label
+                      >
+
+                      <input
+                        type="text"
+                        class="form-control lead fs-6"
+                        id="sendeeemail"
+                        name="sendeeemail"
+                        value="<%= task.user_email %>"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <% }) %>
+                </div>
+                <div class="mt-2 mb-3 row justify-content-start">
+                  <div class="d-grid jusitfy-content-start col-sm-3">
+                    <button type="submit" class="btn btn-warning">
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include('footer') %>
+    <script>
+      add_more_fields.onclick = function() {
+        var html = `<div class="visually-hidden col-12 col-sm-4">\ <label for="taskId" class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"></label>\
+        <input type="number" class="form-control lead fs-6" id="taskId" name="taskId" value=""/>\
+        </div>\        
+        <div class="col-12 col-sm-4">\
+        <label for="tname" class="col-sm-12 col-2 lead fs-6 text-capitalize col-form-label">Name</label>\
+        <input type="text" class="form-control lead fs-6" id="tname" name="tname" required />\
+        </div>\
+        <div class="col-12 col-sm-4">\
+        <label for="taskduedate" class="col-sm-12 col-2 text-capitalize lead fs-6 col-form-label">Due Date</label>\
+        <input type="datetime-local" class="form-control lead fs-6" id="taskduedate" name="taskduedate"required/>\
+        </div>\
+        <div class="col-12 col-sm-4 mb-3">\
+        <label for="sendeeemail" class="col-sm-12 col-2 text-capitalize lead fs-6 col-form-label">Email</label>\
+        <input type="text" class="form-control lead fs-6" id="sendeeemail" name="sendeeemail" required />\
+        </div>`;
+
+        var newField = document.getElementById("add_here");
+        var newDiv = document.createElement("div");
+        newDiv.classList.add("row");
+        newDiv.innerHTML = html;
+        newField.appendChild(newDiv);
+      };
+
+      remove_fields.onclick = function() {
+        var newField = document.getElementById("add_here");
+        newField.removeChild(newField.lastChild);
+      };
+    </script>
+  </body>
+</html>

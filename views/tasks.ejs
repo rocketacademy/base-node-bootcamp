@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'New Task'}); %>
+  <body>
+    <%- include('navbar') %>
+    <div class="container-fluid">
+      <div class="row flex-nowrap min-vh-100 h-auto">
+        <%- include('sidebar') %>
+        <div class="col-9 col-sm-9 col-xl-10 py-3 bg-light">
+          <div class="container">
+            <br />
+            <div class="row mb-3">
+              <div class="display-3 text-warning">Tasks</div>
+            </div>
+            <div class="row mb-3">
+              <div class="lead text-secondary">
+                Pending Tasks <%- include('sorting', {link: "/tasks/all", type:
+                "pending"}) %>
+              </div>
+            </div>
+            <div class="row">
+              <% if(pendingTasks.length === 0) { %>
+              <div class="shadow p-4 mb-3 bg-body rounded">
+                <div class="col-12 lead fs-6">No Pending Tasks</div>
+              </div>
+              <% } else { %> <% pendingTasks.forEach((task) => { %>
+
+              <div class="shadow p-4 mb-3 bg-body rounded">
+                <div class="col-12">
+                  <% if(task.status ==="pending") { %>
+                  <a
+                    href="/tasks/all/completed?projId=<%= task.proj_id %>&taskId=<%= task.id %>&taskStatus=completed"
+                    class="text-decoration-none"
+                  >
+                    <i
+                      class="fs-4 bi bi-check-circle text-secondary btn float-end position-relative"
+                    ></i>
+                  </a>
+
+                  <% } else { %>
+
+                  <a
+                    href="/tasks/all/completed?projId=<%= task.proj_id %>&taskId=<%= task.id %>&taskStatus=pending"
+                    class="text-decoration-none"
+                  >
+                    <i
+                      class="fs-4 bi bi-check-circle-fill text-success btn float-end position-relative"
+                    ></i>
+                  </a>
+
+                  <% } %>
+                </div>
+
+                <div class=" lead fs-6 col-12">
+                  <%= task.name %>
+                </div>
+                <% if( task.due === "Overdue" || task.due === "Due today") { %>
+                <div class=" lead fs-6 text-danger col-12">
+                  <%= task.due %> | <%= task.due_date %>
+                </div>
+                <% } else { %>
+                <div class=" lead fs-6 text-warning col-12">
+                  <%= task.due_date %>
+                </div>
+                <% } %>
+              </div>
+
+              <% }) %> <% } %>
+            </div>
+            <div class="row mb-3 mt-5">
+              <div class="lead text-secondary">
+                Completed Tasks <%- include('sorting', {link: "/tasks/all",
+                type: "completed"}) %>
+              </div>
+            </div>
+            <div class="row">
+              <% if(completedTasks.length === 0) { %>
+              <div class="shadow p-4 mb-3 bg-body rounded">
+                <div class="col-12 lead fs-6">No completed tasks yet!</div>
+              </div>
+
+              <% } else { %> <% completedTasks.forEach((task) => { %>
+              <div class="shadow p-4 mb-3 bg-body rounded">
+                <div class="col-12">
+                  <% if(task.status ==="pending") { %>
+                  <a
+                    href="/tasks/all/completed?projId=<%= task.proj_id %>&taskId=<%= task.id %>&taskStatus=completed"
+                    class="text-decoration-none"
+                  >
+                    <i
+                      class="fs-4 bi bi-check-circle text-secondary btn float-end position-relative"
+                    ></i>
+                  </a>
+
+                  <% } else { %>
+
+                  <a
+                    href="/tasks/all/completed?projId=<%= task.proj_id %>&taskId=<%= task.id %>&taskStatus=pending"
+                    class="text-decoration-none"
+                  >
+                    <i
+                      class="fs-4 bi bi-check-circle-fill text-success btn float-end position-relative"
+                    ></i>
+                  </a>
+
+                  <% } %>
+                </div>
+
+                <div class=" lead col-12 fs-6">
+                  <%= task.name %>
+                </div>
+                <div class=" lead text-warning col-12 fs-6">
+                  <%= task.due_date %>
+                </div>
+              </div>
+
+              <% }) %> <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include('footer') %>
+  </body>
+</html>

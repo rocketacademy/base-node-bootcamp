@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('header', {title:'New Task'}); %>
+  <body>
+    <%- include('navbar') %>
+    <div class="container-fluid">
+      <div class="row flex-nowrap min-vh-100 h-auto">
+        <%- include('sidebar') %>
+        <div class="col-9 col-sm-9 col-xl-10 py-3 bg-light">
+          <div class="container">
+            <br />
+            <div class="row mb-3">
+              <div class="display-3 text-warning">Inbox</div>
+            </div>
+            <div class="row mb-3">
+
+  <div class="btn-sm-group col-3">
+  <button type="button" class="btn btn-outline-warning dropdown-toggle lead fs-6" data-bs-toggle="dropdown" aria-expanded="false">
+    Sort By
+  </button>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item lead fs-6 text-warning" href="/inbox?sortBy=created_by">Sender</a></li>
+    <li><a class="dropdown-item lead fs-6 text-warning" href="/inbox?sortBy=messagesid">Date Received</a></li>
+    <li><a class="dropdown-item lead fs-6 text-warning" href="/inbox?sortBy=accepted">Need Attention</a></li>
+  </ul>
+</div>
+            </div>
+
+            <div class="row">
+              <% if(totalTasks.length === 0) { %>
+                 <div class="lead fs-6 text-secondary"> No Mail </div>
+              <div
+                class="lead text-warning col-12 d-flex justify-content-center"
+              >
+
+                <img
+                  src="/inbox.png"
+                  alt="no friends yet"
+                  width="75%"
+                  height="auto"
+                  alt="300"
+                />
+              </div>
+            </div>
+
+              <% } else { %> 
+                <% totalTasks.forEach((task) => { %>
+                  <!-- For the tasks that need to be accepted -->
+                  <% if(task.sent === "received") { %>
+                 <a
+                href="/received/<%= task.messagesid %>/accept"
+                class="text-decoration-none text-secondary"
+              >
+                <% if(task.accept === 'pending') { %>
+                   <div class="row shadow-sm p-3 mb-3 bg-body rounded border">
+                <% } else { %>
+                  <div class="row shadow-sm p-3 mb-3 bg-light rounded border">
+                <% } %>
+           
+                  <div class="col-12 lead fs-6 text-warning ">
+                    <%= task.username %>
+                  </div>
+                  <div class="col-12 lead fs-6">
+                    The user <%= task.email %> has sent you a request to accept
+                    task,
+                    <span class="text-black"> <%= task.name %> </span> and is
+                    due on
+                    <span class="text-black"> <%= task.due_date %> </span>
+                  </div>
+                </div>
+              </a>
+            <% } else { %>
+              <!-- For the tasks that have been sent to yourself or users -->
+              <% if(task.accept === "pending") { %>
+              <p class="visually-hidden"></p>
+              <% } else { %>
+              
+              <a href="/sent/<%= task.messagesid %>/response" class="text-decoration-none text-secondary">  
+
+              <% if(task.accepted === "no" || task.accepted==="accepted") { %>
+              <div class="row shadow-sm p-3 mb-3 bg-light rounded border">          
+              <% } else { %>
+              <div class="row shadow-sm p-3 mb-3 bg-body rounded border">    
+              <% } %>
+
+                  <div class="col-12 lead fs-6 text-warning">
+                    Admin
+                  </div>
+                  <div class="col-12 lead fs-6">
+                  The request that you have sent to <%= task.email %> regarding 
+                    <span class="text-black"> <%= task.name %> </span> 
+                    has been <%= task.accept %> 
+                  </div>
+                </div>
+              </a>
+                <% } %>
+
+
+           <% } %>      
+            <% }) %>
+             <% } %>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include('footer') %>
+  </body>
+</html>

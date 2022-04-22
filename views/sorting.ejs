@@ -1,0 +1,28 @@
+<div class="btn-group">
+  <button
+    type="button"
+    class="btn"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"
+  >
+    <i class="bi text-secondary bi-caret-down-fill"></i>
+  </button>
+  <ul class="dropdown-menu">
+    <li class="dropdown-item text-warning lead fs-6">Sort By</li>
+    <li><hr class="dropdown-divider" /></li>
+    <li>
+      <a
+        class="dropdown-item text-secondary lead fs-6"
+        href="<%= link %>?<%= type %>SortBy=due_date"
+        >Due Date</a
+      >
+    </li>
+    <li>
+      <a
+        class="dropdown-item text-secondary lead fs-6"
+        href="<%= link %>?<%= type %>SortBy=name"
+        >Name</a
+      >
+    </li>
+  </ul>
+</div>
