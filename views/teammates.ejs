@@ -63,11 +63,14 @@
 
                           <input
                             type="text"
-                            class="form-control lead fs-6"
+                            class="form-control lead fs-6 <%= mailvalid %>"
                             id="sendeeemail"
                             name="sendeeemail"
                             required
                           />
+                          <div class="invalid-feedback">
+                            <%= invalid %>
+                          </div>
                         </div>
                         <div class="modal-footer">
                           <button
@@ -115,12 +118,16 @@
                     src="/friend.jpg"
                     class="card-img-top"
                     alt="friend photo"
+                    height="250"
+                    width="100"
                   />
                   <% } else { %>
                   <img
                     src="/<%= friend.photo %>"
                     class="card-img-top"
                     alt="friend photo"
+                    height="250"
+                    width="100"
                   />
                   <% } %>
                   <div class="card-body">
@@ -147,5 +154,13 @@
       </div>
     </div>
     <%- include('footer') %>
+    <script>
+      const checkValid = document.getElementById("sendeeemail");
+      if (checkValid.classList.contains("is-invalid")) {
+        $(document).ready(function() {
+          $("#addfriends").modal("show");
+        });
+      }
+    </script>
   </body>
 </html>

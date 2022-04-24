@@ -151,7 +151,9 @@ app.get('/teammates', authenticate, getDetails, (req, res) => {
   const { navbar, userId } = req;
 
   pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`).then((results) => {
-    res.render('teammates', { navbar, friends: results.rows });
+    res.render('teammates', {
+      navbar, friends: results.rows, mailvalid: '', invalid: '',
+    });
   });
 });
 
@@ -173,7 +175,9 @@ app.post('/teammates/add', authenticate, getDetails, (req, res) => {
         pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`).then((checkEmail) => {
           const invalid = 'Email does not belong to any user ';
           resolve('invalid user email');
-          res.render('teammatesvalidation', { navbar, friends: checkEmail.rows, invalid });
+          res.render('teammates', {
+            navbar, friends: checkEmail.rows, invalid, mailvalid: 'is-invalid',
+          });
         });
       });
       otherQueries.push(otherQuery);
@@ -190,7 +194,9 @@ app.post('/teammates/add', authenticate, getDetails, (req, res) => {
           if (finalResults.rows.length !== 0) {
             const invalid = 'Already a friend';
             resolve('Already a friend');
-            res.render('teammatesvalidation', { navbar, friends: finalResults.rows, invalid });
+            res.render('teammates', {
+              navbar, friends: finalResults.rows, invalid, mailvalid: 'is-invalid',
+            });
           } else {
             resolve('friend added');
             res.redirect('/teammates');
@@ -652,8 +658,8 @@ app.get('/sent/:id/response', authenticate, getDetails, (req, res) => {
   const { id } = req.params;
   const { navbar } = req;
   pool.query(`SELECT tasks.name, tasks.id AS taskid, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username, users.id, users.email, messages.id AS messagesId, messages.accept, messages.task_id, messages.send_to FROM messages INNER JOIN tasks ON messages.task_id = tasks.id INNER JOIN users ON users.id= messages.send_to WHERE messages.id= ${id}`).then((results) => {
-    console.log(results.rows[0]);
-    res.render('resendtasks', { task: results.rows[0], navbar });
+    // sends back to the form modal that the email input has yet to be validated
+    res.render('resendtasks', { task: results.rows[0], navbar, mailvalid: '' });
   }).catch((error) => {
     console.log('Error executing query', error.stack);
     res.status(503).send(res.rows);
@@ -673,7 +679,7 @@ app.put('/task/:id/response', authenticate, getDetails, (req, res) => {
     if (results.rows.length === 0) {
       console.log('error');
       const newPromise = new Promise((resolve, reject) => {
-        pool.query(`SELECT * FROM tasks WHERE id=${id}`).then((insertResults) => {
+        pool.query(`SELECT name, id AS taskid, due_date, accepted, status, created_by FROM tasks WHERE id=${id}`).then((insertResults) => {
           resolve(insertResults);
         });
       });
@@ -695,7 +701,8 @@ app.put('/task/:id/response', authenticate, getDetails, (req, res) => {
         res.redirect('/inbox');
       } else {
         const task = allQueriesResults[0].rows[0];
-        res.render('resendvalidation', { navbar, task });
+        // sends back to the form modal that the email input is invalid
+        res.render('resendtasks', { navbar, task, mailvalid: 'is-invalid' });
       }
     });
   });

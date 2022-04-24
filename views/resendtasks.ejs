@@ -184,11 +184,14 @@
 
                         <input
                           type="text"
-                          class="form-control lead fs-6"
+                          class="form-control lead fs-6 <%= mailvalid %>"
                           id="sendeeemail"
                           name="sendeeemail"
                           required
                         />
+                        <div class="invalid-feedback">
+                          Email does not exist
+                        </div>
                       </div>
                     </div>
                     <div class="modal-footer">
@@ -214,5 +217,13 @@
       </div>
     </div>
     <%- include('footer') %>
+    <script>
+      const checkValid = document.getElementById("sendeeemail");
+      if (checkValid.classList.contains("is-invalid")) {
+        $(document).ready(function() {
+          $("#exampleModal").modal("show");
+        });
+      }
+    </script>
   </body>
 </html>
