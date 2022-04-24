@@ -140,8 +140,17 @@
                         class="form-control lead fs-6"
                         id="sendeeemail"
                         name="sendeeemail"
+                        list="friends"
                         required
                       />
+                      <datalist id="friends">
+                        <% if(friends.length > 0) { %> <%
+                        friends.forEach((friend)=>{ %>
+                        <option value="<%= friend.email %>"
+                          ><%= friend.name %>
+                        </option>
+                        <% }) %> <% } %>
+                      </datalist>
                     </div>
                   </div>
                 </div>
@@ -167,6 +176,8 @@
       var today = now.toISOString().slice(0, 16);
       document.getElementById("duedate").setAttribute("min", today);
       document.getElementById("taskduedate").setAttribute("min", today);
+      const friends = document.getElementById("friends");
+      const friendsHTML = friends.innerHTML;
 
       add_more_fields.onclick = function() {
         var html = `<div class="col-12 col-sm-4">\
@@ -179,7 +190,10 @@
                   </div>\
                   <div class="col-12 col-sm-4 mb-3">\
                     <label for="sendeeemail" class="col-sm-12 col-2 text-capitalize lead fs-6 col-form-label">Email</label>\
-                    <input type="text" class="form-control lead fs-6" id="sendeeemail" name="sendeeemail" required />\
+                    <input type="text" class="form-control lead fs-6" id="sendeeemail" name="sendeeemail" list="friends" required />\
+                     <datalist id="friends">\ 
+                      ${friendsHTML}
+                         </datalist>\
                   </div>`;
 
         var newField = document.getElementById("add_here");

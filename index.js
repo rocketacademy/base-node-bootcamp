@@ -48,7 +48,7 @@ app.get('/', (req, res) => {
 });
 
 // Submit login details
-app.post('/', authenticate, (req, res) => {
+app.post('/', (req, res) => {
   const user = { ...req.body };
 
   pool.query(`SELECT * FROM users WHERE email='${user.email}'`).then((results) => {
@@ -113,8 +113,7 @@ app.post('/signup', (req, res) => {
 
 // user profile
 app.get('/profile', authenticate, getDetails, (req, res) => {
-  const { navbar } = req;
-  const { userId } = req;
+  const { navbar, userId } = req;
 
   pool.query(`SELECT * FROM users WHERE id=${userId}`).then((results) => {
     const user = results.rows[0];
@@ -138,7 +137,6 @@ app.post('/user/:id/photo', authenticate, multerUpload.single('photo'), (req, re
 app.put('/user/:id', authenticate, multerUpload.single('photo'), (req, res) => {
   const userId = Number(req.params.id);
   const user = req.body;
-  console.log(user);
 
   pool.query(`UPDATE users SET name='${user.name}', email='${user.email}', contact='${user.contact}', role='${user.role}', workplace='${user.workplace}' WHERE id=${userId}`).then((results) => {
     res.redirect('/profile');
@@ -150,8 +148,7 @@ app.put('/user/:id', authenticate, multerUpload.single('photo'), (req, res) => {
 
 // user profile
 app.get('/teammates', authenticate, getDetails, (req, res) => {
-  const { navbar } = req;
-  const { userId } = req;
+  const { navbar, userId } = req;
 
   pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`).then((results) => {
     res.render('teammates', { navbar, friends: results.rows });
@@ -160,14 +157,11 @@ app.get('/teammates', authenticate, getDetails, (req, res) => {
 
 // user profile
 app.post('/teammates/add', authenticate, getDetails, (req, res) => {
-  const { navbar } = req;
+  const { navbar, userId } = req;
   const user = req.body;
-  console.log(user);
-  const { userId } = req;
   let receiptID;
 
   pool.query(`SELECT * FROM users WHERE email='${user.sendeeemail}'`).then((results) => {
-    receiptID = results.rows[0].id;
     const otherQueries = [];
     const allQueries = Promise.all([
       ...otherQueries,
@@ -179,11 +173,12 @@ app.post('/teammates/add', authenticate, getDetails, (req, res) => {
         pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`).then((checkEmail) => {
           const invalid = 'Email does not belong to any user ';
           resolve('invalid user email');
-          res.render('teammatesvalidation', { navbar, friends: result.rows, invalid });
+          res.render('teammatesvalidation', { navbar, friends: checkEmail.rows, invalid });
         });
       });
       otherQueries.push(otherQuery);
     } else {
+      receiptID = results.rows[0].id;
       const mainquery = new Promise((resolve, reject) => {
         // to check if friend already exists
         pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId} AND friends.friend_id=${receiptID} `).then((checkExists) => {
@@ -224,8 +219,7 @@ app.delete('/teammates/:id', authenticate, (req, res) => {
 
 // page to show all the projects
 app.get('/projects', authenticate, getDetails, (req, res) => {
-  const { userId } = req;
-  const { navbar } = req;
+  const { navbar, userId } = req;
   const { completedSortBy } = req.query;
   const { pendingSortBy } = req.query;
 
@@ -243,14 +237,17 @@ app.get('/projects', authenticate, getDetails, (req, res) => {
 
 // form to add a project
 app.get('/projects/add', authenticate, getDetails, (req, res) => {
-  const { navbar } = req;
-  res.render('createproject', { navbar });
+  const { navbar, userId } = req;
+  pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`).then((results) => {
+    const friends = results.rows;
+    console.log(friends);
+    res.render('createproject', { navbar, friends });
+  });
 });
 
 // to post new project and tasks
 app.post('/projects/add', authenticate, getDetails, (req, res) => {
-  const { userId } = req;
-  const { navbar } = req;
+  const { navbar, userId } = req;
   const user = req.body;
   const [name, description, duedate, ...tasks] = Object.values(user);
   const slicedArray = sliceIntoChunks(tasks);
@@ -269,9 +266,8 @@ app.post('/projects/add', authenticate, getDetails, (req, res) => {
           validationArray[index] = 'is-invalid';
           console.log(validationArray);
           const object = { ...user, validation: validationArray };
-          console.log(user);
           res.render('createprojectvalidate', { ...object, navbar });
-          throw new Error('email invalid');
+          reject(new Error('email invalid'));
         }
 
         if (index === slicedArray.length - 1) {
@@ -284,8 +280,8 @@ app.post('/projects/add', authenticate, getDetails, (req, res) => {
   });
 
   checkEmail.then((checkResults) => pool.query('INSERT INTO proj (name, description, due_date, status, progress, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id', values)).then((results) => {
+    console.log('ran');
     const projId = results.rows[0].id;
-
     const taskPromises = [];
 
     slicedArray.forEach((chunk) => {
@@ -328,6 +324,8 @@ app.post('/projects/add', authenticate, getDetails, (req, res) => {
     }).catch((error) => {
       console.log('Error executing query', error.stack);
     });
+  }).catch((allerror) => {
+    console.log(allerror);
   });
 });
 
@@ -416,7 +414,7 @@ app.put('/projects/:id/edit', authenticate, (req, res) => {
           // check if the task already exists
           let query = '';
           if (taskId === '') {
-            query = `INSERT INTO tasks (name, due_date, accepted, status, created_by) VALUES ('${taskName}', '${formattedTDueDate}', 'no', 'pending', 0) RETURNING id`;
+            query = `INSERT INTO tasks (name, due_date, accepted, status, created_by) VALUES ('${taskName}', '${formattedTDueDate}', 'no', 'pending', ${userId}) RETURNING id`;
           } else {
             query = `UPDATE tasks SET name ='${taskName}', due_date='${formattedTDueDate}' WHERE id=${taskId}`;
           }
@@ -556,10 +554,9 @@ app.get('/tasks/completed', authenticate, (req, res) => {
 
 // to get ALL tasks
 app.get('/tasks/all', authenticate, getDetails, (req, res) => {
-  const { userId } = req;
+  const { navbar, userId } = req;
   const { pendingSortBy } = req.query;
   const { completedSortBy } = req.query;
-  const { navbar } = req;
 
   const allQueries = Promise.all([
     pool.query(`SELECT tasks.id, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, proj_tasks.proj_id, proj_tasks.task_id, user_tasks.user_id, user_tasks.task_id, users.name AS username  FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id INNER JOIN user_tasks on user_tasks.task_id = tasks.id INNER JOIN users ON tasks.created_by = users.id WHERE user_tasks.user_id = ${userId} AND tasks.status='completed' AND tasks.accepted='accepted'`),
@@ -706,9 +703,8 @@ app.put('/task/:id/response', authenticate, getDetails, (req, res) => {
 
 // to see their inbox
 app.get('/inbox', authenticate, getDetails, (req, res) => {
-  const { userId } = req;
+  const { navbar, userId } = req;
   const { sortBy } = req.query;
-  const { navbar } = req;
 
   const allQueries = Promise.all([
 

@@ -185,6 +185,11 @@
     </div>
     <%- include('footer') %>
     <script>
+      //getting the date for validation
+      var now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      var today = now.toISOString().slice(0, 16);
+
       add_more_fields.onclick = function() {
         var html = `<div class="visually-hidden col-12 col-sm-4">\ <label for="taskId" class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"></label>\
         <input type="number" class="form-control lead fs-6" id="taskId" name="taskId" value=""/>\
@@ -195,7 +200,7 @@
         </div>\
         <div class="col-12 col-sm-4">\
         <label for="taskduedate" class="col-sm-12 col-2 text-capitalize lead fs-6 col-form-label">Due Date</label>\
-        <input type="datetime-local" class="form-control lead fs-6" id="taskduedate" name="taskduedate"required/>\
+        <input type="datetime-local" class="form-control lead fs-6" id="taskduedate" name="taskduedate" min=${today} required/>\
         </div>\
         <div class="col-12 col-sm-4 mb-3">\
         <label for="sendeeemail" class="col-sm-12 col-2 text-capitalize lead fs-6 col-form-label">Email</label>\
