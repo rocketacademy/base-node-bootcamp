@@ -26,7 +26,7 @@ import checkDueDate from './helperfunctions/checkOverdue.js';
 
 // CREATING THE APP
 const app = express();
-const PORT = 3004;
+const PORT = process.env.PORT || 3004;
 
 app.set('view engine', 'ejs');
 app.use(methodOverride('_method'));
