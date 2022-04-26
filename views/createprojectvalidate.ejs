@@ -95,7 +95,9 @@
                   </span>
                 </div>
                 <div class="row" id="add_here">
-                  <% for(let i=0; i< tname.length; i+=1) { %>
+                  <% if(typeof tname === "string") { %> <% var num = 1 %> <% }
+                  else { %> <% var num = tname.length %> <% } %> <% for(let i=0;
+                  i< num; i+=1) { %>
                   <div class="row">
                     <div class="col-12 col-sm-4">
                       <label

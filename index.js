@@ -255,6 +255,7 @@ app.get('/projects/add', authenticate, getDetails, (req, res) => {
 app.post('/projects/add', authenticate, getDetails, (req, res) => {
   const { navbar, userId } = req;
   const user = req.body;
+  console.log('user', user);
   const [name, description, duedate, ...tasks] = Object.values(user);
   const slicedArray = sliceIntoChunks(tasks);
   const validationArray = createEmpty(slicedArray);
@@ -270,7 +271,6 @@ app.post('/projects/add', authenticate, getDetails, (req, res) => {
         // if the email is invalid
         if (userIdResults.rows.length === 0) {
           validationArray[index] = 'is-invalid';
-          console.log(validationArray);
           const object = { ...user, validation: validationArray };
           res.render('createprojectvalidate', { ...object, navbar });
           reject(new Error('email invalid'));
