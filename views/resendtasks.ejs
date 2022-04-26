@@ -89,14 +89,14 @@
 
                 <% if(task.accepted ==="no" || task.accepted==="accepted") { %>
                 <div class="row mb-3">
-                  <div class="col-3">
+                  <div class="col-sm-3 col-12 mb-3">
                     <div class="d-grid col-12 mx-auto">
                       <button type="submit" class="btn btn-warning" disabled>
                         Delete Task
                       </button>
                     </div>
                   </div>
-                  <div class="col-3">
+                  <div class="col-sm-3 col-12 mb-3">
                     <div class="d-grid col-12 mx-auto">
                       <button
                         type="button"
@@ -112,7 +112,7 @@
                 </div>
                 <% } else { %>
                 <div class="row mb-3">
-                  <div class="col-3">
+                  <div class="col-sm-3 col-12 mb-3">
                     <form
                       action="/task/<%= task.taskid %>?_method=DELETE"
                       method="POST"
@@ -124,7 +124,7 @@
                       </div>
                     </form>
                   </div>
-                  <div class="col-3">
+                  <div class="col-sm-3 col-12 mb-3">
                     <div class="d-grid col-12 mx-auto">
                       <button
                         type="button"
