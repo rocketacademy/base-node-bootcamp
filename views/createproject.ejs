@@ -23,7 +23,7 @@
               <div class="row mb-3">
                 <label
                   for="name"
-                  class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                  class="col-sm-12 text-capitalize col-form-label lead fs-6"
                   >Name</label
                 >
                 <div class="col-sm-12">
@@ -39,7 +39,7 @@
               <div class="row mb-3">
                 <label
                   for="description"
-                  class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                  class="col-sm-12 text-capitalize col-form-label lead fs-6"
                   >Description</label
                 >
                 <div class="col-sm-12">
@@ -55,7 +55,7 @@
               <div class="row mb-3">
                 <label
                   for="duedate"
-                  class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                  class="col-sm-12 text-capitalize col-form-label lead fs-6"
                   >Date Due</label
                 >
                 <div class="col-sm-12">
@@ -101,7 +101,7 @@
                     <div class="col-12 col-sm-4">
                       <label
                         for="tname"
-                        class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                        class="col-sm-12 text-capitalize col-form-label lead fs-6"
                         >Name</label
                       >
 
@@ -116,7 +116,7 @@
                     <div class="col-12 col-sm-4">
                       <label
                         for="taskduedate"
-                        class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                        class="col-sm-12 text-capitalize col-form-label lead fs-6"
                         >Due Date</label
                       >
 
@@ -131,7 +131,7 @@
                     <div class="col-12 col-sm-4 mb-3">
                       <label
                         for="sendeeemail"
-                        class="col-sm-12 col-2 text-capitalize col-form-label lead fs-6"
+                        class="col-sm-12 text-capitalize col-form-label lead fs-6"
                         >Email</label
                       >
 
@@ -181,15 +181,15 @@
 
       add_more_fields.onclick = function() {
         var html = `<div class="col-12 col-sm-4">\
-        <label for="tname" class="col-sm-12 col-2 lead fs-6 text-capitalize col-form-label">Name</label>\
+        <label for="tname" class="col-sm-12 lead fs-6 text-capitalize col-form-label">Name</label>\
         <input type="text" class="form-control lead fs-6" id="tname" name="tname" required />\
         </div>\
                   <div class="col-12 col-sm-4">\
-                    <label for="taskduedate" class="col-sm-12 col-2 text-capitalize lead fs-6 col-form-label">Due Date</label>\
+                    <label for="taskduedate" class="col-sm-12 text-capitalize lead fs-6 col-form-label">Due Date</label>\
                     <input type="datetime-local" class="form-control lead fs-6" id="taskduedate" name="taskduedate" min=${today} required/>\
                   </div>\
                   <div class="col-12 col-sm-4 mb-3">\
-                    <label for="sendeeemail" class="col-sm-12 col-2 text-capitalize lead fs-6 col-form-label">Email</label>\
+                    <label for="sendeeemail" class="col-sm-12 text-capitalize lead fs-6 col-form-label">Email</label>\
                     <input type="text" class="form-control lead fs-6" id="sendeeemail" name="sendeeemail" list="friends" required />\
                      <datalist id="friends">\ 
                       ${friendsHTML}
