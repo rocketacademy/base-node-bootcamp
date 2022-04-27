@@ -4,6 +4,7 @@ import moment from 'moment';
 import methodOverride from 'method-override';
 import cookieParser from 'cookie-parser';
 import aws from 'aws-sdk';
+import multer from 'multer';
 import multerS3 from 'multer-s3';
 import pool from './helperfunctions/pool.js';
 import 'dotenv/config';
@@ -48,7 +49,7 @@ app.use(cookieParser());
 const multerUpload = multer({
   storage: multerS3({
     s3,
-    bucket: 'collab',
+    bucket: '<MY_BUCKET_NAME>',
     acl: 'public-read',
     metadata: (request, file, callback) => {
       callback(null, { fieldName: file.fieldname });
