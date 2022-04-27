@@ -6,8 +6,8 @@ import cookieParser from 'cookie-parser';
 import aws from 'aws-sdk';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
+import dotenv from 'dotenv';
 import pool from './helperfunctions/pool.js';
-import 'dotenv/config';
 
 // HELPER FUNCTIONS
 // checks if the login is authentic
@@ -30,6 +30,11 @@ import checkDueDate from './helperfunctions/checkOverdue.js';
 // CREATING THE APP
 const app = express();
 const PORT = process.env.PORT || 3004;
+
+// configure env variables
+const envFilePath = '.env';
+dotenv.config({ path: path.normalize(envFilePath) });
+
 // Initialise the S3 SDK with our secret keys from environment variables.
 const s3 = new aws.S3({
   accessKeyId: process.env.ACCESSKEYID,
@@ -145,7 +150,7 @@ app.get('/profile', authenticate, getDetails, (req, res) => {
 app.post('/user/:id/photo', authenticate, multerUpload.single('photo'), (req, res) => {
   const userId = Number(req.params.id);
   console.log(req.file.filename);
-  pool.query(`UPDATE users SET photo='${req.file.filename}' WHERE id=${userId}`).then((results) => {
+  pool.query(`UPDATE users SET photo='${req.file.originalname}' WHERE id=${userId}`).then((results) => {
     res.redirect('/profile');
   }).catch((error) => {
     console.log('Error executing query', error.stack);
