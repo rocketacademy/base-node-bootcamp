@@ -3,8 +3,10 @@ import express from 'express';
 import moment from 'moment';
 import methodOverride from 'method-override';
 import cookieParser from 'cookie-parser';
-import multer from 'multer';
+import aws from 'aws-sdk';
+import multerS3 from 'multer-s3';
 import pool from './helperfunctions/pool.js';
+import 'dotenv/config';
 
 // HELPER FUNCTIONS
 // checks if the login is authentic
@@ -27,6 +29,11 @@ import checkDueDate from './helperfunctions/checkOverdue.js';
 // CREATING THE APP
 const app = express();
 const PORT = process.env.PORT || 3004;
+// Initialise the S3 SDK with our secret keys from environment variables.
+const s3 = new aws.S3({
+  accessKeyId: process.env.ACCESSKEYID,
+  secretAccessKey: process.env.SECRETACCESSKEY,
+});
 
 app.set('view engine', 'ejs');
 app.use(methodOverride('_method'));
@@ -37,8 +44,20 @@ app.use(express.static('uploads'));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// to add photos into the uploads folder
-const multerUpload = multer({ dest: 'uploads/' });
+// Initialise the Multer SDK with multerS3.
+const multerUpload = multer({
+  storage: multerS3({
+    s3,
+    bucket: 'collab',
+    acl: 'public-read',
+    metadata: (request, file, callback) => {
+      callback(null, { fieldName: file.fieldname });
+    },
+    key: (request, file, callback) => {
+      callback(null, Date.now().toString());
+    },
+  }),
+});
 
 // EJS PAGES
 // Log in page
