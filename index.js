@@ -49,7 +49,7 @@ app.use(cookieParser());
 const multerUpload = multer({
   storage: multerS3({
     s3,
-    bucket: '<MY_BUCKET_NAME>',
+    bucket: 'collab',
     acl: 'public-read',
     metadata: (request, file, callback) => {
       callback(null, { fieldName: file.fieldname });
