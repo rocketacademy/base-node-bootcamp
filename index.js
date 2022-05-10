@@ -7,6 +7,7 @@ import aws from 'aws-sdk';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 import dotenv from 'dotenv';
+import path from 'path';
 import pool from './helperfunctions/pool.js';
 
 // HELPER FUNCTIONS
@@ -40,6 +41,8 @@ const s3 = new aws.S3({
   accessKeyId: process.env.ACCESSKEYID,
   secretAccessKey: process.env.SECRETACCESSKEY,
 });
+
+console.log('s3', s3);
 
 app.set('view engine', 'ejs');
 app.use(methodOverride('_method'));
@@ -149,8 +152,8 @@ app.get('/profile', authenticate, getDetails, (req, res) => {
 
 app.post('/user/:id/photo', authenticate, multerUpload.single('photo'), (req, res) => {
   const userId = Number(req.params.id);
-  console.log(req.file.filename);
-  pool.query(`UPDATE users SET photo='${req.file.originalname}' WHERE id=${userId}`).then((results) => {
+  console.log(req.file);
+  pool.query(`UPDATE users SET photo='${req.file.location}' WHERE id=${userId}`).then((results) => {
     res.redirect('/profile');
   }).catch((error) => {
     console.log('Error executing query', error.stack);
