@@ -42,8 +42,6 @@ const s3 = new aws.S3({
   secretAccessKey: process.env.SECRETACCESSKEY,
 });
 
-console.log('s3', s3);
-
 app.set('view engine', 'ejs');
 app.use(methodOverride('_method'));
 // Add express.static config to allow Express to serve files from public folder
@@ -76,32 +74,36 @@ app.get('/', (req, res) => {
 });
 
 // Submit login details
-app.post('/', (req, res) => {
-  const user = { ...req.body };
+app.post('/', async (req, res) => {
+  try {
+    const user = { ...req.body };
+    const checkEmail = await pool.query(`SELECT * FROM users WHERE email='${user.email}'`);
 
-  pool.query(`SELECT * FROM users WHERE email='${user.email}'`).then((results) => {
-    if (results.rows.length === 0) {
-      const validate = validateForm('is-invalid', '', 'Enter valid password', 'Email does not exists! Please sign up');
-      res.render('login', validate);
+    if (checkEmail.rows.length === 0) {
+      throw new Error('email does not exist');
     }
 
-    const storedUser = results.rows[0];
-    console.log(storedUser);
+    const storedUser = checkEmail.rows[0];
     // check if password is correct
     const hashedUserPassword = getHash(user.password);
+
     if (storedUser.password !== hashedUserPassword) {
-      const validate = validateForm('is-valid', 'is-invalid', 'Wrong Password', '');
-      res.render('login', validate);
+      throw new Error('incorrect password');
     } else {
       res.cookie('username', storedUser.name);
       res.cookie('userId', storedUser.id);
       res.cookie('hashedSession', getHash(storedUser.id));
       res.redirect('/projects');
     }
-  }).catch((error) => {
-    console.log('Error executing query', error.stack);
-    res.status(503).send(res.rows);
-  });
+  } catch (error) {
+    let validate;
+    if (error.message === 'email does not exist') {
+      validate = validateForm('is-invalid', '', 'Enter valid password', 'Email does not exists! Please sign up');
+    } else if (error.message === 'incorrect password') {
+      validate = validateForm('is-valid', 'is-invalid', 'Wrong Password', '');
+    }
+    res.render('login', validate);
+  }
 });
 
 app.get('/logout', (req, res) => {
@@ -118,265 +120,174 @@ app.get('/signup', (req, res) => {
 });
 
 // create a new user, signing up
-app.post('/signup', (req, res) => {
-  const user = { ...req.body };
+app.post('/signup', async (req, res) => {
+  try {
+    const user = { ...req.body };
+    const checkEmail = await pool.query(`SELECT * FROM users WHERE email='${user.email}'`);
 
-  pool.query(`SELECT * FROM users WHERE email='${user.email}'`).then((results) => {
-    if (results.rows.length > 0) {
-      const validate = validateForm('is-invalid', '', 'Enter valid password', 'Email has already been registered');
-      res.render('signup', validate);
+    if (checkEmail.rows.length > 0) {
+      throw new Error('registered email');
     }
 
     const hashedPassword = getHash(user.password);
     const values = [user.name, user.email, hashedPassword];
-    return pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id', values);
-  }).then((result) => {
-    console.log(result);
+    const insertUser = await pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id', values);
     res.redirect('/');
-  }).catch((error) => {
-    console.log('Error executing query', error.stack);
-    res.status(503).send(res.rows);
-  });
+  } catch (error) {
+    if (error.message === 'registered email') {
+      const validate = validateForm('is-invalid', '', 'Enter valid password', 'Email has already been registered');
+      res.render('signup', validate);
+    }
+  }
 });
 
 // user profile
-app.get('/profile', authenticate, getDetails, (req, res) => {
+app.get('/profile', authenticate, getDetails, async (req, res) => {
   const { navbar, userId } = req;
-
-  pool.query(`SELECT * FROM users WHERE id=${userId}`).then((results) => {
-    const user = results.rows[0];
-    const { contact } = user;
-    res.render('profile', { navbar, user });
-  });
+  const user = await pool.query(`SELECT * FROM users WHERE id=${userId}`);
+  res.render('profile', { navbar, user: user.rows[0] });
 });
 
-app.post('/user/:id/photo', authenticate, multerUpload.single('photo'), (req, res) => {
-  const userId = Number(req.params.id);
-  console.log(req.file);
-  pool.query(`UPDATE users SET photo='${req.file.location}' WHERE id=${userId}`).then((results) => {
+app.post('/user/:id/photo', authenticate, multerUpload.single('photo'), async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const update = await pool.query(`UPDATE users SET photo='${req.file.location}' WHERE id=${userId}`);
     res.redirect('/profile');
-  }).catch((error) => {
-    console.log('Error executing query', error.stack);
-    res.status(503).send(res.rows);
-  });
+  } catch (error) {
+    console.log('Error executing query', error);
+  }
 });
 
 // Edit the profile of the user
-app.put('/user/:id', authenticate, multerUpload.single('photo'), (req, res) => {
-  const userId = Number(req.params.id);
-  const user = req.body;
-
-  pool.query(`UPDATE users SET name='${user.name}', email='${user.email}', contact='${user.contact}', role='${user.role}', workplace='${user.workplace}' WHERE id=${userId}`).then((results) => {
+app.put('/user/:id', authenticate, multerUpload.single('photo'), async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const user = req.body;
+    const updateProfile = await pool.query(`UPDATE users SET name='${user.name}', email='${user.email}', contact='${user.contact}', role='${user.role}', workplace='${user.workplace}' WHERE id=${userId}`);
     res.redirect('/profile');
-  }).catch((error) => {
+  } catch (error) {
     console.log('Error executing query', error.stack);
     res.status(503).send(res.rows);
-  });
+  }
 });
 
 // user profile
-app.get('/teammates', authenticate, getDetails, (req, res) => {
+app.get('/teammates', authenticate, getDetails, async (req, res) => {
   const { navbar, userId } = req;
-
-  pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`).then((results) => {
-    res.render('teammates', {
-      navbar, friends: results.rows, mailvalid: '', invalid: '',
-    });
+  const friends = await pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`);
+  res.render('teammates', {
+    navbar, friends: friends.rows, mailvalid: '', invalid: '',
   });
 });
 
-// user profile
-app.post('/teammates/add', authenticate, getDetails, (req, res) => {
+app.post('/teammates/add', authenticate, getDetails, async (req, res) => {
   const { navbar, userId } = req;
   const user = req.body;
-  let receiptID;
-
-  pool.query(`SELECT * FROM users WHERE email='${user.sendeeemail}'`).then((results) => {
-    const otherQueries = [];
-    const allQueries = Promise.all([
-      ...otherQueries,
-    ]);
-
-    if (results.rows.length === 0) {
-      // if the email does not exist
-      const otherQuery = new Promise((resolve, reject) => {
-        pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`).then((checkEmail) => {
-          const invalid = 'Email does not belong to any user ';
-          resolve('invalid user email');
-          res.render('teammates', {
-            navbar, friends: checkEmail.rows, invalid, mailvalid: 'is-invalid',
-          });
-        });
-      });
-      otherQueries.push(otherQuery);
-    } else {
-      receiptID = results.rows[0].id;
-      const mainquery = new Promise((resolve, reject) => {
-        // to check if friend already exists
-        pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId} AND friends.friend_id=${receiptID} `).then((checkExists) => {
-          if (checkExists.rows.length === 0) {
-            return pool.query(`INSERT INTO friends (user_id, friend_id) VALUES ( ${userId}, ${receiptID} )`);
-          }
-          return pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`);
-        }).then((finalResults) => {
-          if (finalResults.rows.length !== 0) {
-            const invalid = 'Already a friend';
-            resolve('Already a friend');
-            res.render('teammates', {
-              navbar, friends: finalResults.rows, invalid, mailvalid: 'is-invalid',
-            });
-          } else {
-            resolve('friend added');
-            res.redirect('/teammates');
-          }
-        });
-      });
-      otherQueries.push(mainquery);
+  try {
+    const checkEmail = await pool.query(`SELECT * FROM users WHERE email='${user.sendeeemail}'`);
+    if (checkEmail.rows.length === 0) {
+      throw new Error('email does not exist');
     }
+    const receiptID = checkEmail.rows[0].id;
+    const checkFriends = await pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId} AND friends.friend_id=${receiptID} `);
+    if (checkFriends.rows.length > 0) {
+      throw new Error('friend exists');
+    }
+    const insertFriends = await pool.query(`INSERT INTO friends (user_id, friend_id) VALUES ( ${userId}, ${receiptID} )`);
+    res.redirect('/teammates');
+  } catch (error) {
+    const finalResults = await pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`);
 
-    console.log(otherQueries);
-    return allQueries;
-  }).then((endResults) => {
-    console.log('all done');
-  }).catch((error) => {
-    console.log('Error executing query', error.stack);
-  });
+    if (error.message === 'friend exists') {
+      res.render('teammates', {
+        navbar, friends: finalResults.rows, invalid: 'friend already exists', mailvalid: 'is-invalid',
+      });
+    } else if (error.message === 'email does not exist') {
+      res.render('teammates', {
+        navbar, friends: finalResults.rows, invalid: 'Email does not belong to any user', mailvalid: 'is-invalid',
+      });
+    }
+  }
 });
 
-app.delete('/teammates/:id', authenticate, (req, res) => {
+app.delete('/teammates/:id', authenticate, async (req, res) => {
   const { userId } = req;
   const friendId = Number(req.params.id);
-  pool.query(`DELETE FROM friends WHERE friend_id=${friendId} AND user_id=${userId}`).then((results) => {
-    res.redirect('/teammates');
-  });
+  const deleteFriend = await pool.query(`DELETE FROM friends WHERE friend_id=${friendId} AND user_id=${userId}`);
+  res.redirect('/teammates');
 });
 
 // page to show all the projects
-app.get('/projects', authenticate, getDetails, (req, res) => {
+app.get('/projects', authenticate, getDetails, async (req, res) => {
   const { navbar, userId } = req;
   const { completedSortBy } = req.query;
   const { pendingSortBy } = req.query;
 
-  const allQueries = Promise.all([
-    pool.query(`SELECT * FROM proj WHERE created_by = ${userId} AND status='pending'`),
-    pool.query(`SELECT * FROM proj WHERE created_by = ${userId} AND status ='completed'`),
-  ]).then((results) => {
-    const unsortedcompletedProj = results[0].rows;
-    const unsortedpendingProj = results[1].rows;
-    const pendingProj = dynamicSort(pendingSortBy, unsortedcompletedProj);
-    const completedProj = dynamicSort(completedSortBy, unsortedpendingProj);
-    res.render('projects', { pendingProj, completedProj, navbar });
-  });
+  const unsortedcompletedProj = await pool.query(`SELECT * FROM proj WHERE created_by = ${userId} AND status='pending'`);
+  const unsortedpendingProj = await pool.query(`SELECT * FROM proj WHERE created_by = ${userId} AND status ='completed'`);
+  const pendingProj = dynamicSort(pendingSortBy, unsortedcompletedProj.rows);
+  const completedProj = dynamicSort(completedSortBy, unsortedpendingProj.rows);
+  res.render('projects', { pendingProj, completedProj, navbar });
 });
 
 // form to add a project
-app.get('/projects/add', authenticate, getDetails, (req, res) => {
+app.get('/projects/add', authenticate, getDetails, async (req, res) => {
   const { navbar, userId } = req;
-  pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`).then((results) => {
-    const friends = results.rows;
-    console.log(friends);
-    res.render('createproject', { navbar, friends });
-  });
+  const friends = await pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`);
+  res.render('createproject', { navbar, friends: friends.rows });
 });
 
 // to post new project and tasks
-app.post('/projects/add', authenticate, getDetails, (req, res) => {
+app.post('/projects/add', authenticate, getDetails, async (req, res) => {
   const { navbar, userId } = req;
   const user = req.body;
-  console.log('user', user);
   const [name, description, duedate, ...tasks] = Object.values(user);
   const slicedArray = sliceIntoChunks(tasks);
   const validationArray = createEmpty(slicedArray);
   const fomattedDueDate = moment(duedate).format('DD MMM YYYY hh:mm');
   const values = [name, description, fomattedDueDate, 'pending', 0, userId];
 
-  // do validation for emails first
-  const checkEmail = new Promise((resolve, reject) => {
-    slicedArray.forEach((chunk, index) => {
-      const [taskName, taskduedate, email] = chunk;
-      pool.query(`SELECT * FROM users WHERE email='${email}'`).then((userIdResults) => {
-        console.log(chunk, index);
-        // if the email is invalid
-        if (userIdResults.rows.length === 0) {
-          validationArray[index] = 'is-invalid';
-          const object = { ...user, validation: validationArray };
-          res.render('createprojectvalidate', { ...object, navbar });
-          reject(new Error('email invalid'));
-        }
-
-        if (index === slicedArray.length - 1) {
-          resolve('checked');
-        }
-      }).catch((error) => {
-        console.log(error);
-      });
-    });
-  });
-
-  checkEmail.then((checkResults) => pool.query('INSERT INTO proj (name, description, due_date, status, progress, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id', values)).then((results) => {
-    console.log('ran');
-    const projId = results.rows[0].id;
-    const taskPromises = [];
-
-    slicedArray.forEach((chunk) => {
+  try {
+    // do validation for emails first
+    slicedArray.forEach(async (chunk, index) => {
       const [taskName, taskduedate, email] = chunk;
       const formattedTDueDate = moment(taskduedate).format('DD MMM YYYY hh:mm');
-      let taskId;
-      let receiptId;
-
-      const insertTasks = new Promise((resolve, reject) => {
-        pool.query(`SELECT * FROM users WHERE email='${email}'`).then((userIdResults) => {
-          receiptId = userIdResults.rows[0].id;
-          return pool.query('INSERT INTO tasks (name, due_date, accepted, status, created_by) VALUES ( $1, $2, $3, $4, $5) RETURNING id', [taskName, formattedTDueDate, 'no', 'pending', userId]);
-        }).then((insertTaskResults) => {
-          taskId = insertTaskResults.rows[0].id;
-          return pool.query('INSERT INTO user_tasks (user_id, task_id) VALUES ($1, $2)', [receiptId, taskId]);
-        }).then((insertUserTaskResults) => {
-          console.log('taskID', taskId);
-          console.log('receiptID', receiptId);
-
-          return pool.query('INSERT INTO proj_tasks (proj_id, task_id) VALUES ($1, $2)', [projId, taskId]);
-        })
-          .then((insertProjTaskResults) => pool.query('INSERT INTO messages (send_to, task_id, accept) VALUES ($1, $2, $3)', [receiptId, taskId, 'pending']))
-          .then((insertMessages) => {
-            resolve('alldone');
-          })
-          .catch((error) => {
-            reject(error.stack);
-          });
-      });
-      taskPromises.push(insertTasks);
+      const users = await pool.query(`SELECT * FROM users WHERE email='${email}'`);
+      // if the email is invalid
+      if (users.rows.length === 0) {
+        validationArray[index] = 'is-invalid';
+        const object = { ...user, validation: validationArray };
+        res.render('createprojectvalidate', { ...object, navbar });
+        throw new Error('email is invalid');
+      }
+      const receiptId = users.rows[0].id;
+      const insertTasks = await pool.query('INSERT INTO tasks (name, due_date, accepted, status, created_by) VALUES ( $1, $2, $3, $4, $5) RETURNING id', [taskName, formattedTDueDate, 'no', 'pending', userId]);
+      const taskId = insertTasks.rows[0].id;
+      const insertUserTasks = await pool.query('INSERT INTO user_tasks (user_id, task_id) VALUES ($1, $2)', [receiptId, taskId]);
+      const insertProjTasks = await pool.query('INSERT INTO proj_tasks (proj_id, task_id) VALUES ($1, $2)', [projId, taskId]);
+      const insertMessages = await pool.query('INSERT INTO messages (send_to, task_id, accept) VALUES ($1, $2, $3)', [receiptId, taskId, 'pending']);
     });
 
-    const allQueries = Promise.all([
-      ...taskPromises,
-    ]);
-
-    allQueries.then((allresults) => {
-      console.log('all results', allresults);
-      res.redirect('/projects');
-    }).catch((error) => {
-      console.log('Error executing query', error.stack);
-    });
-  }).catch((allerror) => {
-    console.log(allerror);
-  });
+    const insertProj = await pool.query('INSERT INTO proj (name, description, due_date, status, progress, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id', values);
+    const projId = insertProj.rows.id;
+    res.redirect('/projects');
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // to get the page for the individual project with id
-app.get('/projects/:id', authenticate, getDetails, (req, res) => {
-  const projId = Number(req.params.id);
-  const { navbar } = req;
-  const allQueries = Promise.all([
-    pool.query(`SELECT * FROM proj WHERE id= ${projId}`), pool.query(`SELECT user_tasks.user_id, user_tasks.task_id, proj_tasks.proj_id, proj_tasks.task_id, tasks.id, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username FROM user_tasks INNER JOIN proj_tasks ON proj_tasks.task_id = user_tasks.task_id INNER JOIN tasks ON user_tasks.task_id = tasks.id INNER JOIN users ON user_tasks.user_id = users.id WHERE proj_id=${projId}`),
-  ]).then((results) => {
-    const proj = results[0].rows[0];
-    const tasks = results[1].rows;
-    res.render('individualproj', { proj, tasks, navbar });
-  }).catch((error) => {
+app.get('/projects/:id', authenticate, getDetails, async (req, res) => {
+  try {
+    const projId = Number(req.params.id);
+    const { navbar } = req;
+    const proj = await pool.query(`SELECT * FROM proj WHERE id= ${projId}`);
+    const tasks = await pool.query(`SELECT user_tasks.user_id, user_tasks.task_id, proj_tasks.proj_id, proj_tasks.task_id, tasks.id, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username FROM user_tasks INNER JOIN proj_tasks ON proj_tasks.task_id = user_tasks.task_id INNER JOIN tasks ON user_tasks.task_id = tasks.id INNER JOIN users ON user_tasks.user_id = users.id WHERE proj_id=${projId}`);
+    res.render('individualproj', { proj: proj.rows, tasks: tasks.rows, navbar });
+  } catch (error) {
     console.log('Error executing query', error.stack);
     res.status(503).send(res.rows);
-  });
+  }
 });
 
 // to get the form to edit the project
@@ -425,7 +336,6 @@ app.get('/projects/:id/edit', authenticate, getDetails, (req, res) => {
 app.put('/projects/:id/edit', authenticate, (req, res) => {
   const { userId } = req;
   const user = req.body;
-  console.log(user);
   const projId = req.params.id;
   const [name, description, duedate, ...tasks] = Object.values(user);
   const fomattedDueDate = moment(duedate).format('DD MMM YYYY hh:mm');
@@ -511,38 +421,23 @@ app.put('/projects/:id/edit', authenticate, (req, res) => {
 });
 
 // delete the project and relevant tasks
-app.delete('/projects/:id', (req, res) => {
-  const projId = Number(req.params.id);
-  const otherQueries = [];
-
-  pool.query(`SELECT * FROM proj_tasks WHERE proj_id = ${projId}`).then((results) => {
-    const tasks = results.rows;
-
-    tasks.forEach((task) => {
+app.delete('/projects/:id', async (req, res) => {
+  try {
+    const projId = Number(req.params.id);
+    const projTasks = await pool.query(`SELECT * FROM proj_tasks WHERE proj_id = ${projId}`);
+    const tasks = projTasks.rows;
+    tasks.forEach(async (task) => {
       const taskId = task.id;
-      const deleteTasks = new Promise((resolve, reject) => {
-        pool.query(`DELETE FROM tasks WHERE id=${taskId}`).then((deleteResults) => pool.query(`DELETE FROM user_tasks WHERE task_id=${taskId}`)).then((secondDelete) => {
-          pool.query(`DELETE FROM messages WHERE task_id=${taskId}`);
-        }).then((lastDelete) => {
-          resolve('finished delete from tasks and user_tasks');
-        });
-      });
-      otherQueries.push(deleteTasks);
+      const deleteTasks = await pool.query(`DELETE FROM tasks WHERE id=${taskId}`);
+      const deleteUserTasks = await pool.query(`DELETE FROM user_tasks WHERE task_id=${taskId}`);
+      const deleteMessages = await pool.query(`DELETE FROM messages WHERE task_id=${taskId}`);
     });
-    console.log(otherQueries);
-
-    const allQueries = Promise.all([
-      pool.query(`DELETE FROM proj WHERE id=${projId}`),
-      pool.query(`DELETE FROM proj_tasks WHERE proj_id=${projId}`),
-      ...otherQueries,
-    ]).then((allresults) => {
-      console.log('deleted from all tables');
-      res.redirect('/projects/');
-    }).catch((error) => {
-      console.log('Error executing query', error.stack);
-      res.status(503).send(res.rows);
-    });
-  });
+    const deleteProj = await pool.query(`DELETE FROM proj WHERE id=${projId}`);
+    const deleteProjTasks = await pool.query(`DELETE FROM proj_tasks WHERE proj_id=${projId}`);
+    res.redirect('/projects/');
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // to update tasks to be completed and update progress of the project
@@ -611,87 +506,75 @@ app.get('/tasks/all', authenticate, getDetails, (req, res) => {
 });
 
 // to update tasks to be completed and update progress of the project
-app.get('/tasks/all/completed', authenticate, (req, res) => {
-  const { projId, taskId, taskStatus } = req.query;
+app.get('/tasks/all/completed', authenticate, async (req, res) => {
+  try {
+    const { projId, taskId, taskStatus } = req.query;
+    const updateTasks = await pool.query(`UPDATE tasks SET status='${taskStatus}' WHERE id=${taskId}`);
+    const pending = await pool.query(`SELECT * FROM proj_tasks WHERE proj_id=${projId}`);
+    const totalTasks = pending.rows.length;
+    const completed = await pool.query(`SELECT * FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id WHERE proj_tasks.proj_id = ${projId} AND tasks.status = 'completed'`);
+    const completedTasks = completed.rows.length;
 
-  pool.query(`UPDATE tasks SET status='${taskStatus}' WHERE id=${taskId}`).then((results) => {
-    const allQueries = Promise.all([
-      pool.query(`SELECT * FROM proj_tasks WHERE proj_id=${projId}`),
-      pool.query(`SELECT * FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id WHERE proj_tasks.proj_id = ${projId} AND tasks.status = 'completed'`),
-    ]).then((result) => {
-      const totalTasks = result[0].rows.length;
-      const completedTasks = result[1].rows.length;
+    let progress = 0;
 
-      let progress = 0;
-      if (completedTasks === 0) {
-        progress = 0;
-      } else {
-        progress = Math.floor((completedTasks / totalTasks) * 100);
-      }
+    if (completedTasks === 0) {
+      progress = 0;
+    } else {
+      progress = Math.floor((completedTasks / totalTasks) * 100);
+    }
 
-      let progressStatus = '';
-      if (progress === 100) {
-        progressStatus = 'completed';
-      } else {
-        progressStatus = 'pending';
-      }
-      const second = Promise.all([
-        pool.query(`UPDATE proj SET progress = ${progress} WHERE id=${projId}`),
-        pool.query(`UPDATE proj SET status='${progressStatus}' WHERE id=${projId}`),
-      ]);
+    let progressStatus = '';
+    if (progress === 100) {
+      progressStatus = 'completed';
+    } else {
+      progressStatus = 'pending';
+    }
 
-      second.then((totalResults) => {
-        console.log('successfully updated');
-        res.redirect('/tasks/all');
-      }).catch((error) => {
-        console.log('Error executing query', error.stack);
-        res.status(503).send(res.rows);
-      });
-    });
-  });
+    const updateProj = await pool.query(`UPDATE proj SET progress = ${progress}, status='${progressStatus}' WHERE id=${projId}`);
+    res.redirect('/tasks/all');
+  } catch (error) {
+    console.log('error');
+  }
 });
 
 // to get the form on whether they want to accept the task
-app.get('/received/:id/accept', authenticate, getDetails, (req, res) => {
+app.get('/received/:id/accept', authenticate, getDetails, async (req, res) => {
   const { id } = req.params;
   const { navbar } = req;
-  pool.query(`SELECT tasks.name, tasks.id AS taskid, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username, users.id, users.email, messages.id AS messagesId, messages.accept, messages.task_id, messages.send_to FROM tasks INNER JOIN messages ON messages.task_id = tasks.id INNER JOIN users ON tasks.created_by= users.id WHERE messages.id= ${id}`).then((results) => {
-    console.log(results.rows[0]);
-    res.render('accepttasks', { task: results.rows[0], navbar });
-  }).catch((error) => {
-    console.log('Error executing query', error.stack);
-    res.status(503).send(res.rows);
-  });
+  try {
+    const accepttasks = await pool.query(`SELECT tasks.name, tasks.id AS taskid, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username, users.id, users.email, messages.id AS messagesId, messages.accept, messages.task_id, messages.send_to FROM tasks INNER JOIN messages ON messages.task_id = tasks.id INNER JOIN users ON tasks.created_by= users.id WHERE messages.id= ${id}`);
+    res.render('accepttasks', { task: accepttasks.rows[0], navbar });
+  } catch (error) {
+    console.log('Error executing query', error);
+  }
 });
 
 // to post their response to whether they accepted
-app.post('/received/:id/accept', authenticate, (req, res) => {
+app.post('/received/:id/accept', authenticate, async (req, res) => {
   const messageId = Number(req.params.id);
   const { accept } = req.body;
-  pool.query(`SELECT * FROM messages WHERE id=${messageId}`).then((messagesResults) => {
-    const taskId = Number(messagesResults.rows[0].task_id);
-    return pool.query(`UPDATE tasks SET accepted ='${accept}' WHERE id=${taskId}`);
-  }).then((updateResults) => pool.query(`UPDATE messages SET accept='${accept}' WHERE id=${messageId}`)).then((finalResults) => {
-    console.log('updated');
+  try {
+    const messages = await pool.query(`SELECT * FROM messages WHERE id=${messageId}`);
+    const taskId = Number(messages.rows[0].task_id);
+    const updateTasks = await pool.query(`UPDATE tasks SET accepted ='${accept}' WHERE id=${taskId}`);
+    const updateMessages = await pool.query(`UPDATE messages SET accept='${accept}' WHERE id=${messageId}`);
     res.redirect('/inbox');
-  })
-    .catch((error) => {
-      console.log('Error executing query', error.stack);
-      res.status(503).send(res.rows);
-    });
+  } catch (error) {
+    console.log('Error executing query', error.stack);
+    res.status(503).send(res.rows);
+  }
 });
 
 // to get the email that allow user to resend tasks
-app.get('/sent/:id/response', authenticate, getDetails, (req, res) => {
-  const { id } = req.params;
-  const { navbar } = req;
-  pool.query(`SELECT tasks.name, tasks.id AS taskid, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username, users.id, users.email, messages.id AS messagesId, messages.accept, messages.task_id, messages.send_to FROM messages INNER JOIN tasks ON messages.task_id = tasks.id INNER JOIN users ON users.id= messages.send_to WHERE messages.id= ${id}`).then((results) => {
-    // sends back to the form modal that the email input has yet to be validated
-    res.render('resendtasks', { task: results.rows[0], navbar, mailvalid: '' });
-  }).catch((error) => {
-    console.log('Error executing query', error.stack);
-    res.status(503).send(res.rows);
-  });
+app.get('/sent/:id/response', authenticate, getDetails, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { navbar } = req;
+    const resendTasks = await pool.query(`SELECT tasks.name, tasks.id AS taskid, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username, users.id, users.email, messages.id AS messagesId, messages.accept, messages.task_id, messages.send_to FROM messages INNER JOIN tasks ON messages.task_id = tasks.id INNER JOIN users ON users.id= messages.send_to WHERE messages.id= ${id}`);
+    res.render('resendtasks', { task: resendTasks.rows[0], navbar, mailvalid: '' });
+  } catch (error) {
+    console.log('Error executing query', error);
+  }
 });
 
 // to change the user that is assigned the task after task has been rejected
@@ -737,31 +620,24 @@ app.put('/task/:id/response', authenticate, getDetails, (req, res) => {
 });
 
 // to see their inbox
-app.get('/inbox', authenticate, getDetails, (req, res) => {
+app.get('/inbox', authenticate, getDetails, async (req, res) => {
   const { navbar, userId } = req;
   const { sortBy } = req.query;
-
-  const allQueries = Promise.all([
-
-    pool.query(`SELECT tasks.name, tasks.id, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, messages.accept, messages.task_id, messages.id AS messagesId, messages.send_to, users.name AS username, users.id, users.email FROM tasks INNER JOIN users ON tasks.created_by = users.id INNER JOIN messages ON messages.task_id = tasks.id WHERE messages.send_to='${userId}'`),
-
-    pool.query(`SELECT tasks.name, tasks.id, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, messages.accept, messages.task_id, users.name AS username, users.id, users.email, messages.send_to, messages.id AS messagesId FROM messages INNER JOIN tasks ON messages.task_id = tasks.id INNER JOIN users ON messages.send_to = users.id WHERE tasks.created_by='${userId}'`),
-
-  ]).then((results) => {
-    const prereceivedTasks = results[0].rows;
-    const receivedTasks = addSentProperty(prereceivedTasks, 'received');
-    const presentTasks = results[1].rows;
-    const sentTasks = addSentProperty(presentTasks, 'sent');
+  try {
+    const prereceivedTasks = await pool.query(`SELECT tasks.name, tasks.id, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, messages.accept, messages.task_id, messages.id AS messagesId, messages.send_to, users.name AS username, users.id, users.email FROM tasks INNER JOIN users ON tasks.created_by = users.id INNER JOIN messages ON messages.task_id = tasks.id WHERE messages.send_to='${userId}'`);
+    const receivedTasks = addSentProperty(prereceivedTasks.rows, 'received');
+    const presentTasks = await pool.query(`SELECT tasks.name, tasks.id, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, messages.accept, messages.task_id, users.name AS username, users.id, users.email, messages.send_to, messages.id AS messagesId FROM messages INNER JOIN tasks ON messages.task_id = tasks.id INNER JOIN users ON messages.send_to = users.id WHERE tasks.created_by='${userId}'`);
+    const sentTasks = addSentProperty(presentTasks.rows, 'sent');
     const pretotalTasks = [...receivedTasks, ...sentTasks];
     const totalTasks = dynamicSort(sortBy, pretotalTasks);
 
     res.render('inbox', {
       totalTasks, navbar, inboxId: userId,
     });
-  }).catch((error) => {
+  } catch (error) {
     console.log('Error executing query', error.stack);
     res.status(503).send(res.rows);
-  });
+  }
 });
 
 app.listen(PORT);
