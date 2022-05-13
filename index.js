@@ -131,7 +131,7 @@ app.post('/signup', async (req, res) => {
 
     const hashedPassword = getHash(user.password);
     const values = [user.name, user.email, hashedPassword];
-    const insertUser = await pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id', values);
+    await pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id', values);
     res.redirect('/');
   } catch (error) {
     if (error.message === 'registered email') {
@@ -151,7 +151,7 @@ app.get('/profile', authenticate, getDetails, async (req, res) => {
 app.post('/user/:id/photo', authenticate, multerUpload.single('photo'), async (req, res) => {
   try {
     const userId = Number(req.params.id);
-    const update = await pool.query(`UPDATE users SET photo='${req.file.location}' WHERE id=${userId}`);
+    await pool.query(`UPDATE users SET photo='${req.file.location}' WHERE id=${userId}`);
     res.redirect('/profile');
   } catch (error) {
     console.log('Error executing query', error);
@@ -163,7 +163,7 @@ app.put('/user/:id', authenticate, multerUpload.single('photo'), async (req, res
   try {
     const userId = Number(req.params.id);
     const user = req.body;
-    const updateProfile = await pool.query(`UPDATE users SET name='${user.name}', email='${user.email}', contact='${user.contact}', role='${user.role}', workplace='${user.workplace}' WHERE id=${userId}`);
+    await pool.query(`UPDATE users SET name='${user.name}', email='${user.email}', contact='${user.contact}', role='${user.role}', workplace='${user.workplace}' WHERE id=${userId}`);
     res.redirect('/profile');
   } catch (error) {
     console.log('Error executing query', error.stack);
@@ -193,7 +193,7 @@ app.post('/teammates/add', authenticate, getDetails, async (req, res) => {
     if (checkFriends.rows.length > 0) {
       throw new Error('friend exists');
     }
-    const insertFriends = await pool.query(`INSERT INTO friends (user_id, friend_id) VALUES ( ${userId}, ${receiptID} )`);
+    await pool.query(`INSERT INTO friends (user_id, friend_id) VALUES ( ${userId}, ${receiptID} )`);
     res.redirect('/teammates');
   } catch (error) {
     const finalResults = await pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`);
@@ -213,7 +213,7 @@ app.post('/teammates/add', authenticate, getDetails, async (req, res) => {
 app.delete('/teammates/:id', authenticate, async (req, res) => {
   const { userId } = req;
   const friendId = Number(req.params.id);
-  const deleteFriend = await pool.query(`DELETE FROM friends WHERE friend_id=${friendId} AND user_id=${userId}`);
+  await pool.query(`DELETE FROM friends WHERE friend_id=${friendId} AND user_id=${userId}`);
   res.redirect('/teammates');
 });
 
@@ -248,6 +248,9 @@ app.post('/projects/add', authenticate, getDetails, async (req, res) => {
   const values = [name, description, fomattedDueDate, 'pending', 0, userId];
 
   try {
+    const insertProj = await pool.query('INSERT INTO proj (name, description, due_date, status, progress, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id', values);
+    const projId = insertProj.rows[0].id;
+
     // do validation for emails first
     slicedArray.forEach(async (chunk, index) => {
       const [taskName, taskduedate, email] = chunk;
@@ -255,6 +258,7 @@ app.post('/projects/add', authenticate, getDetails, async (req, res) => {
       const users = await pool.query(`SELECT * FROM users WHERE email='${email}'`);
       // if the email is invalid
       if (users.rows.length === 0) {
+        await pool.query(`DELETE FROM proj WHERE id=${projId}`);
         validationArray[index] = 'is-invalid';
         const object = { ...user, validation: validationArray };
         res.render('createprojectvalidate', { ...object, navbar });
@@ -263,13 +267,11 @@ app.post('/projects/add', authenticate, getDetails, async (req, res) => {
       const receiptId = users.rows[0].id;
       const insertTasks = await pool.query('INSERT INTO tasks (name, due_date, accepted, status, created_by) VALUES ( $1, $2, $3, $4, $5) RETURNING id', [taskName, formattedTDueDate, 'no', 'pending', userId]);
       const taskId = insertTasks.rows[0].id;
-      const insertUserTasks = await pool.query('INSERT INTO user_tasks (user_id, task_id) VALUES ($1, $2)', [receiptId, taskId]);
-      const insertProjTasks = await pool.query('INSERT INTO proj_tasks (proj_id, task_id) VALUES ($1, $2)', [projId, taskId]);
-      const insertMessages = await pool.query('INSERT INTO messages (send_to, task_id, accept) VALUES ($1, $2, $3)', [receiptId, taskId, 'pending']);
+      console.log('projId', projId);
+      await pool.query('INSERT INTO user_tasks (user_id, task_id) VALUES ($1, $2)', [receiptId, taskId]);
+      await pool.query('INSERT INTO proj_tasks (proj_id, task_id) VALUES ($1, $2)', [projId, taskId]);
+      await pool.query('INSERT INTO messages (send_to, task_id, accept) VALUES ($1, $2, $3)', [receiptId, taskId, 'pending']);
     });
-
-    const insertProj = await pool.query('INSERT INTO proj (name, description, due_date, status, progress, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id', values);
-    const projId = insertProj.rows.id;
     res.redirect('/projects');
   } catch (error) {
     console.log(error);
@@ -282,8 +284,9 @@ app.get('/projects/:id', authenticate, getDetails, async (req, res) => {
     const projId = Number(req.params.id);
     const { navbar } = req;
     const proj = await pool.query(`SELECT * FROM proj WHERE id= ${projId}`);
+    console.log(proj.rows);
     const tasks = await pool.query(`SELECT user_tasks.user_id, user_tasks.task_id, proj_tasks.proj_id, proj_tasks.task_id, tasks.id, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username FROM user_tasks INNER JOIN proj_tasks ON proj_tasks.task_id = user_tasks.task_id INNER JOIN tasks ON user_tasks.task_id = tasks.id INNER JOIN users ON user_tasks.user_id = users.id WHERE proj_id=${projId}`);
-    res.render('individualproj', { proj: proj.rows, tasks: tasks.rows, navbar });
+    res.render('individualproj', { proj: proj.rows[0], tasks: tasks.rows, navbar });
   } catch (error) {
     console.log('Error executing query', error.stack);
     res.status(503).send(res.rows);
@@ -291,133 +294,64 @@ app.get('/projects/:id', authenticate, getDetails, async (req, res) => {
 });
 
 // to get the form to edit the project
-app.get('/projects/:id/edit', authenticate, getDetails, (req, res) => {
+app.get('/projects/:id/edit', authenticate, getDetails, async (req, res) => {
   const projId = Number(req.params.id);
   const { navbar } = req;
-
-  const getTasks = new Promise((resolve, reject) => {
-    pool.query(`SELECT tasks.id AS taskid, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, proj_tasks.proj_id, proj_tasks.task_id, user_tasks.user_id, user_tasks.task_id FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id INNER JOIN user_tasks ON user_tasks.task_id = tasks.id WHERE proj_tasks. proj_id = ${projId}`).then((results) => {
-      const tasks = results.rows;
-      const updatedTasks = [];
-      let counter = 0;
-      const limit = tasks.length;
-      tasks.forEach((task) => {
-        const receiptId = task.user_id;
-        pool.query(`SELECT * FROM users WHERE id=${receiptId}`).then((result) => {
-          counter += 1;
-          const userEmail = result.rows[0].email;
-          task.user_email = userEmail;
-          task.formatdate = moment(task.due_date).format('YYYY-MM-DDTHH:MM');
-          updatedTasks.push(task);
-
-          console.log(counter, limit);
-          if (counter === limit) {
-            resolve(updatedTasks);
-            return updatedTasks;
-          }
-        });
-      });
+  try {
+    const getTasks = await pool.query(`SELECT tasks.id AS taskid, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, proj_tasks.proj_id, proj_tasks.task_id, user_tasks.user_id, user_tasks.task_id FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id INNER JOIN user_tasks ON user_tasks.task_id = tasks.id WHERE proj_tasks. proj_id = ${projId}`);
+    const tasks = getTasks.rows;
+    const updatedTasks = [];
+    tasks.forEach(async (task) => {
+      const receiptId = task.user_id;
+      const users = await pool.query(`SELECT * FROM users WHERE id=${receiptId}`);
+      const userEmail = users.rows[0].email;
+      task.user_email = userEmail;
+      task.formatdate = moment(task.due_date).format('YYYY-MM-DDTHH:MM');
+      updatedTasks.push(task);
     });
-  });
-
-  const allQueries = Promise.all([
-    pool.query(`SELECT * FROM proj WHERE id= ${projId}`), getTasks]).then((results) => {
-    const proj = results[0].rows[0];
+    const getProj = await pool.query(`SELECT * FROM proj WHERE id= ${projId}`);
+    const proj = getProj.rows[0];
     proj.formatdate = moment(proj.due_date).format('YYYY-MM-DDTHH:MM');
-    const tasks = results[1];
-    res.render('editproject', { proj, tasks, navbar });
-  }).catch((error) => {
-    console.log('Error executing query', error.stack);
-    res.status(503).send(res.rows);
-  });
+    res.render('editproject', { proj, tasks: updatedTasks, navbar });
+  } catch (error) {
+    console.log('Error executing query', error);
+  }
 });
 
 // to edit the details
-app.put('/projects/:id/edit', authenticate, (req, res) => {
+app.put('/projects/:id/edit', authenticate, async (req, res) => {
   const { userId } = req;
   const user = req.body;
   const projId = req.params.id;
   const [name, description, duedate, ...tasks] = Object.values(user);
   const fomattedDueDate = moment(duedate).format('DD MMM YYYY hh:mm');
 
-  // edit the project details
-  pool.query(`UPDATE proj SET name ='${name}', description='${description}', due_date='${fomattedDueDate}' WHERE id=${projId}`).then((result) => {
-    const slicedArray = sliceForEdit(tasks);
-    const taskPromises = [];
+  try {
+    await pool.query(`UPDATE proj SET name ='${name}', description='${description}', due_date='${fomattedDueDate}' WHERE id=${projId}`);
 
-    slicedArray.forEach((chunk) => {
+    const slicedArray = sliceForEdit(tasks);
+    slicedArray.forEach(async (chunk) => {
       const [taskId, taskName, taskduedate, email] = chunk;
       const formattedTDueDate = moment(taskduedate).format('DD MMM YYYY hh:mm');
-      let receiptId;
-      let newTaskId;
-
-      const insertTasks = new Promise((resolve, reject) => {
-        // check for the user id of the person assined
-        pool.query(`SELECT * FROM users WHERE email='${email}'`).then((results) => {
-          receiptId = Number(results.rows[0].id);
-          // check if the task already exists
-          let query = '';
-          if (taskId === '') {
-            query = `INSERT INTO tasks (name, due_date, accepted, status, created_by) VALUES ('${taskName}', '${formattedTDueDate}', 'no', 'pending', ${userId}) RETURNING id`;
-          } else {
-            query = `UPDATE tasks SET name ='${taskName}', due_date='${formattedTDueDate}' WHERE id=${taskId}`;
-          }
-          return pool.query(query);
-        }).then((booleanResults) => {
-          // edit the person assigned to the task
-
-          let query2;
-
-          if (booleanResults.rows.length > 0) {
-            newTaskId = Number(booleanResults.rows[0].id);
-            console.log(newTaskId);
-            query2 = `INSERT INTO user_tasks (user_id, task_id) VALUES ('${receiptId}', '${newTaskId}') RETURNING id`;
-          } else {
-            query2 = `UPDATE user_tasks SET user_id ='${receiptId}' WHERE id='${taskId}'`;
-          }
-          return pool.query(query2);
-        })
-          .then((editPerson) => {
-            // edit the projects assignment
-            let query3;
-            if (editPerson.rows.length > 0) {
-              query3 = `INSERT INTO proj_tasks (proj_id, task_id) VALUES (${projId}, ${newTaskId}) RETURNING id`;
-            } else {
-              query3 = `UPDATE proj_tasks SET proj_id ='${projId}' WHERE id=${taskId}`;
-            }
-            return pool.query(query3);
-          })
-          .then((endResults) => {
-            let query4;
-
-            if (endResults.rows.length > 0) {
-              query4 = `INSERT INTO messages (send_to, task_id, accept) VALUES ('${receiptId}', '${newTaskId}', 'pending') RETURNING id`;
-            } else {
-              query4 = 'SELECT * FROM messages';
-            }
-            return pool.query(query4);
-          })
-          .then((finishResults) => {
-            resolve('finished');
-          })
-          .catch((error) => {
-            console.log('Error executing query', error.stack);
-            res.status(503).send(res.rows);
-          });
-      });
-      taskPromises.push(insertTasks);
+      const getUsers = await pool.query(`SELECT * FROM users WHERE email='${email}'`);
+      const receiptId = Number(getUsers.rows[0].id);
+      const query = '';
+      if (taskId === '') {
+        const insertTask = await pool.query(`INSERT INTO tasks (name, due_date, accepted, status, created_by) VALUES ('${taskName}', '${formattedTDueDate}', 'no', 'pending', ${userId}) RETURNING id`);
+        const newTaskId = Number(insertTask.rows[0].id);
+        await pool.query(`INSERT INTO user_tasks (user_id, task_id) VALUES ('${receiptId}', '${newTaskId}') RETURNING id`);
+        await pool.query(`INSERT INTO proj_tasks (proj_id, task_id) VALUES (${projId}, ${newTaskId}) RETURNING id`);
+        await pool.query(`INSERT INTO messages (send_to, task_id, accept) VALUES ('${receiptId}', '${newTaskId}', 'pending') RETURNING id`);
+      } else {
+        await pool.query(`UPDATE tasks SET name ='${taskName}', due_date='${formattedTDueDate}' WHERE id=${taskId}`);
+        await pool.query(`UPDATE user_tasks SET user_id ='${receiptId}' WHERE id='${taskId}'`);
+        await pool.query(`UPDATE proj_tasks SET proj_id ='${projId}' WHERE id=${taskId}`);
+      }
     });
-    const allQueries = Promise.all([
-      ...taskPromises,
-    ]);
-
-    allQueries.then((allresults) => {
-      res.redirect(`/projects/${projId}`);
-    }).catch((error) => {
-      console.log('Error executing query', error.stack);
-      res.status(503).send(res.rows);
-    });
-  });
+    res.redirect(`/projects/${projId}`);
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // delete the project and relevant tasks
@@ -428,12 +362,12 @@ app.delete('/projects/:id', async (req, res) => {
     const tasks = projTasks.rows;
     tasks.forEach(async (task) => {
       const taskId = task.id;
-      const deleteTasks = await pool.query(`DELETE FROM tasks WHERE id=${taskId}`);
-      const deleteUserTasks = await pool.query(`DELETE FROM user_tasks WHERE task_id=${taskId}`);
-      const deleteMessages = await pool.query(`DELETE FROM messages WHERE task_id=${taskId}`);
+      await pool.query(`DELETE FROM tasks WHERE id=${taskId}`);
+      await pool.query(`DELETE FROM user_tasks WHERE task_id=${taskId}`);
+      await pool.query(`DELETE FROM messages WHERE task_id=${taskId}`);
     });
-    const deleteProj = await pool.query(`DELETE FROM proj WHERE id=${projId}`);
-    const deleteProjTasks = await pool.query(`DELETE FROM proj_tasks WHERE proj_id=${projId}`);
+    await pool.query(`DELETE FROM proj WHERE id=${projId}`);
+    await pool.query(`DELETE FROM proj_tasks WHERE proj_id=${projId}`);
     res.redirect('/projects/');
   } catch (error) {
     console.log(error);
@@ -441,75 +375,62 @@ app.delete('/projects/:id', async (req, res) => {
 });
 
 // to update tasks to be completed and update progress of the project
-app.get('/tasks/completed', authenticate, (req, res) => {
+app.get('/tasks/completed', authenticate, async (req, res) => {
   const { projId, taskId, taskStatus } = req.query;
+  try {
+    await pool.query(`UPDATE tasks SET status='${taskStatus}' WHERE id=${taskId}`);
+    const tasks = await pool.query(`SELECT * FROM proj_tasks WHERE proj_id=${projId}`);
+    const completed = await pool.query(`SELECT * FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id WHERE proj_tasks.proj_id = ${projId} AND tasks.status = 'completed'`);
+    const totalTasks = tasks.rows.length;
+    const completedTasks = completed.rows.length;
+    let progress = 0;
+    if (completedTasks === 0) {
+      progress = 0;
+    } else {
+      progress = Math.floor((completedTasks / totalTasks) * 100);
+    }
 
-  pool.query(`UPDATE tasks SET status='${taskStatus}' WHERE id=${taskId}`).then((results) => {
-    const allQueries = Promise.all([
-      pool.query(`SELECT * FROM proj_tasks WHERE proj_id=${projId}`),
-      pool.query(`SELECT * FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id WHERE proj_tasks.proj_id = ${projId} AND tasks.status = 'completed'`),
-    ]).then((result) => {
-      const totalTasks = result[0].rows.length;
-      const completedTasks = result[1].rows.length;
+    let progressStatus = '';
+    if (progress === 100) {
+      progressStatus = 'completed';
+    } else {
+      progressStatus = 'pending';
+    }
 
-      let progress = 0;
-      if (completedTasks === 0) {
-        progress = 0;
-      } else {
-        progress = Math.floor((completedTasks / totalTasks) * 100);
-      }
-
-      let progressStatus = '';
-      if (progress === 100) {
-        progressStatus = 'completed';
-      } else {
-        progressStatus = 'pending';
-      }
-      const second = Promise.all([
-        pool.query(`UPDATE proj SET progress = ${progress} WHERE id=${projId}`),
-        pool.query(`UPDATE proj SET status='${progressStatus}' WHERE id=${projId}`),
-      ]);
-
-      second.then((totalResults) => {
-        console.log('successfully updated');
-        res.redirect(`/projects/${projId}`);
-      }).catch((error) => {
-        console.log('Error executing query', error.stack);
-        res.status(503).send(res.rows);
-      });
-    });
-  });
+    await pool.query(`UPDATE proj SET progress = ${progress}, status='${progressStatus}'  WHERE id=${projId}`);
+    res.redirect(`/projects/${projId}`);
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // to get ALL tasks
-app.get('/tasks/all', authenticate, getDetails, (req, res) => {
+app.get('/tasks/all', authenticate, getDetails, async (req, res) => {
   const { navbar, userId } = req;
   const { pendingSortBy } = req.query;
   const { completedSortBy } = req.query;
+  try {
+    const completed = await pool.query(`SELECT tasks.id, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, proj_tasks.proj_id, proj_tasks.task_id, user_tasks.user_id, user_tasks.task_id, users.name AS username  FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id INNER JOIN user_tasks on user_tasks.task_id = tasks.id INNER JOIN users ON tasks.created_by = users.id WHERE user_tasks.user_id = ${userId} AND tasks.status='completed' AND tasks.accepted='accepted'`);
 
-  const allQueries = Promise.all([
-    pool.query(`SELECT tasks.id, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, proj_tasks.proj_id, proj_tasks.task_id, user_tasks.user_id, user_tasks.task_id, users.name AS username  FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id INNER JOIN user_tasks on user_tasks.task_id = tasks.id INNER JOIN users ON tasks.created_by = users.id WHERE user_tasks.user_id = ${userId} AND tasks.status='completed' AND tasks.accepted='accepted'`),
-    pool.query(`SELECT tasks.id, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, proj_tasks.proj_id, proj_tasks.task_id, user_tasks.user_id, user_tasks.task_id, users.name AS username  FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id INNER JOIN user_tasks on user_tasks.task_id = tasks.id INNER JOIN users ON tasks.created_by = users.id WHERE user_tasks.user_id = ${userId} AND tasks.status='pending' AND tasks.accepted='accepted'`),
-  ]).then((results) => {
-    const unsortedcompletedTasks = results[0].rows;
-    const unsortedpendingTasks = results[1].rows;
+    const pending = await pool.query(`SELECT tasks.id, tasks.name, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, proj_tasks.proj_id, proj_tasks.task_id, user_tasks.user_id, user_tasks.task_id, users.name AS username  FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id INNER JOIN user_tasks on user_tasks.task_id = tasks.id INNER JOIN users ON tasks.created_by = users.id WHERE user_tasks.user_id = ${userId} AND tasks.status='pending' AND tasks.accepted='accepted'`);
+
+    const unsortedcompletedTasks = completed.rows;
+    const unsortedpendingTasks = pending.rows;
     const checkpendingTasks = dynamicSort(pendingSortBy, unsortedpendingTasks);
     const pendingTasks = checkDueDate(checkpendingTasks);
-    console.log(pendingTasks);
     const completedTasks = dynamicSort(completedSortBy, unsortedcompletedTasks);
-
     res.render('tasks', { completedTasks, pendingTasks, navbar });
-  }).catch((error) => {
-    console.log('Error executing query', error.stack);
-    res.status(503).send(res.rows);
-  });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // to update tasks to be completed and update progress of the project
 app.get('/tasks/all/completed', authenticate, async (req, res) => {
   try {
     const { projId, taskId, taskStatus } = req.query;
-    const updateTasks = await pool.query(`UPDATE tasks SET status='${taskStatus}' WHERE id=${taskId}`);
+
+    await pool.query(`UPDATE tasks SET status='${taskStatus}' WHERE id=${taskId}`);
     const pending = await pool.query(`SELECT * FROM proj_tasks WHERE proj_id=${projId}`);
     const totalTasks = pending.rows.length;
     const completed = await pool.query(`SELECT * FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id WHERE proj_tasks.proj_id = ${projId} AND tasks.status = 'completed'`);
@@ -530,7 +451,7 @@ app.get('/tasks/all/completed', authenticate, async (req, res) => {
       progressStatus = 'pending';
     }
 
-    const updateProj = await pool.query(`UPDATE proj SET progress = ${progress}, status='${progressStatus}' WHERE id=${projId}`);
+    await pool.query(`UPDATE proj SET progress = ${progress}, status='${progressStatus}' WHERE id=${projId}`);
     res.redirect('/tasks/all');
   } catch (error) {
     console.log('error');
@@ -556,8 +477,8 @@ app.post('/received/:id/accept', authenticate, async (req, res) => {
   try {
     const messages = await pool.query(`SELECT * FROM messages WHERE id=${messageId}`);
     const taskId = Number(messages.rows[0].task_id);
-    const updateTasks = await pool.query(`UPDATE tasks SET accepted ='${accept}' WHERE id=${taskId}`);
-    const updateMessages = await pool.query(`UPDATE messages SET accept='${accept}' WHERE id=${messageId}`);
+    await pool.query(`UPDATE tasks SET accepted ='${accept}' WHERE id=${taskId}`);
+    await pool.query(`UPDATE messages SET accept='${accept}' WHERE id=${messageId}`);
     res.redirect('/inbox');
   } catch (error) {
     console.log('Error executing query', error.stack);
@@ -578,45 +499,29 @@ app.get('/sent/:id/response', authenticate, getDetails, async (req, res) => {
 });
 
 // to change the user that is assigned the task after task has been rejected
-app.put('/task/:id/response', authenticate, getDetails, (req, res) => {
+app.put('/task/:id/response', authenticate, getDetails, async (req, res) => {
   const id = Number(req.params.id);
   const { navbar } = req;
   const { sendeeemail } = req.body;
-  const taskPromises = [];
-
-  pool.query(`SELECT * FROM users WHERE email='${sendeeemail}'`).then((results) => {
-    console.log(results.rows);
-
-    if (results.rows.length === 0) {
-      console.log('error');
-      const newPromise = new Promise((resolve, reject) => {
-        pool.query(`SELECT name, id AS taskid, due_date, accepted, status, created_by FROM tasks WHERE id=${id}`).then((insertResults) => {
-          resolve(insertResults);
-        });
-      });
-      taskPromises.push(newPromise);
+  try {
+    const users = await pool.query(`SELECT * FROM users WHERE email='${sendeeemail}'`);
+    if (users.rows.length === 0) {
+      throw new Error('user does not exist');
     } else {
       const receiptID = Number(results.rows[0].id);
-      const newPromise = new Promise((resolve, reject) => {
-        pool.query(`UPDATE user_tasks SET user_id= ${receiptID} WHERE task_id=${id}`).then((insertResults) => pool.query(`INSERT INTO messages (send_to, task_id, accept) VALUES ('${receiptID}', '${id}', 'pending')`).then((updateTasks) => pool.query(`UPDATE tasks SET accepted='no' WHERE id=${id}`))).then((lastResults) => {
-          resolve('all done');
-        });
-      });
-      taskPromises.push(newPromise);
+      await pool.query(`UPDATE user_tasks SET user_id= ${receiptID} WHERE task_id=${id}`);
+      await pool.query(`INSERT INTO messages (send_to, task_id, accept) VALUES ('${receiptID}', '${id}', 'pending')`);
+      await pool.query(`UPDATE tasks SET accepted='no' WHERE id=${id}`);
+      res.redirect('/inbox');
     }
-
-    const allQueries = Promise.all([...taskPromises]);
-    allQueries.then((allQueriesResults) => {
-      console.log('allQueries', allQueriesResults[0]);
-      if (allQueriesResults[0] === 'all done') {
-        res.redirect('/inbox');
-      } else {
-        const task = allQueriesResults[0].rows[0];
-        // sends back to the form modal that the email input is invalid
-        res.render('resendtasks', { navbar, task, mailvalid: 'is-invalid' });
-      }
-    });
-  });
+  } catch (error) {
+    const tasks = await pool.query(`SELECT name, id AS taskid, due_date, accepted, status, created_by FROM tasks WHERE id=${id}`);
+    if (error.message === 'user does not exist') {
+      const task = tasks.rows[0];
+      // sends back to the form modal that the email input is invalid
+      res.render('resendtasks', { navbar, task, mailvalid: 'is-invalid' });
+    }
+  }
 });
 
 // to see their inbox
