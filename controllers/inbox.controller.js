@@ -1,10 +1,8 @@
-import pool from '../helperfunctions/pool.js';
 import addSentProperty from '../helperfunctions/addSent.js';
 import dynamicSort from '../helperfunctions/sorting.js';
 
 class InboxController {
-  constructor(db) {
-    this.db = db;
+  constructor(pool) {
     this.pool = pool;
   }
 

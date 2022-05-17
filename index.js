@@ -148,7 +148,7 @@ app.get('/profile', authenticate, getDetails, async (req, res) => {
   res.render('profile', { navbar, user: user.rows[0] });
 });
 
-app.post('/user/:id/photo', authenticate, multerUpload.single('photo'), async (req, res) => {
+app.post('/profile/:id/photo', authenticate, multerUpload.single('photo'), async (req, res) => {
   try {
     const userId = Number(req.params.id);
     await pool.query(`UPDATE users SET photo='${req.file.location}' WHERE id=${userId}`);
@@ -159,7 +159,7 @@ app.post('/user/:id/photo', authenticate, multerUpload.single('photo'), async (r
 });
 
 // Edit the profile of the user
-app.put('/user/:id', authenticate, multerUpload.single('photo'), async (req, res) => {
+app.put('/profile/:id', authenticate, multerUpload.single('photo'), async (req, res) => {
   try {
     const userId = Number(req.params.id);
     const user = req.body;

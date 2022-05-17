@@ -1,8 +1,5 @@
-import pool from '../helperfunctions/pool.js';
-
 class ProfileController {
-  constructor(db) {
-    this.db = db;
+  constructor(pool) {
     this.pool = pool;
   }
 
