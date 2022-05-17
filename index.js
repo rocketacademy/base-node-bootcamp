@@ -459,7 +459,7 @@ app.get('/tasks/all/completed', authenticate, async (req, res) => {
 });
 
 // to get the form on whether they want to accept the task
-app.get('/received/:id/accept', authenticate, getDetails, async (req, res) => {
+app.get('/task/:id/accept', authenticate, getDetails, async (req, res) => {
   const { id } = req.params;
   const { navbar } = req;
   try {
@@ -471,7 +471,7 @@ app.get('/received/:id/accept', authenticate, getDetails, async (req, res) => {
 });
 
 // to post their response to whether they accepted
-app.post('/received/:id/accept', authenticate, async (req, res) => {
+app.post('/task/:id/accept', authenticate, async (req, res) => {
   const messageId = Number(req.params.id);
   const { accept } = req.body;
   try {
@@ -487,7 +487,7 @@ app.post('/received/:id/accept', authenticate, async (req, res) => {
 });
 
 // to get the email that allow user to resend tasks
-app.get('/sent/:id/response', authenticate, getDetails, async (req, res) => {
+app.get('/task/:id/resend', authenticate, getDetails, async (req, res) => {
   try {
     const { id } = req.params;
     const { navbar } = req;
@@ -499,7 +499,7 @@ app.get('/sent/:id/response', authenticate, getDetails, async (req, res) => {
 });
 
 // to change the user that is assigned the task after task has been rejected
-app.put('/task/:id/response', authenticate, getDetails, async (req, res) => {
+app.put('/task/:id/resend', authenticate, getDetails, async (req, res) => {
   const id = Number(req.params.id);
   const { navbar } = req;
   const { sendeeemail } = req.body;
@@ -508,7 +508,7 @@ app.put('/task/:id/response', authenticate, getDetails, async (req, res) => {
     if (users.rows.length === 0) {
       throw new Error('user does not exist');
     } else {
-      const receiptID = Number(results.rows[0].id);
+      const receiptID = Number(users.rows[0].id);
       await pool.query(`UPDATE user_tasks SET user_id= ${receiptID} WHERE task_id=${id}`);
       await pool.query(`INSERT INTO messages (send_to, task_id, accept) VALUES ('${receiptID}', '${id}', 'pending')`);
       await pool.query(`UPDATE tasks SET accepted='no' WHERE id=${id}`);

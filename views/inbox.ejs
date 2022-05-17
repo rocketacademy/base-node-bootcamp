@@ -48,7 +48,7 @@
                   <!-- For the tasks that need to be accepted -->
                   <% if(task.sent === "received") { %>
                  <a
-                href="/received/<%= task.messagesid %>/accept"
+                href="/task/<%= task.messagesid %>/accept"
                 class="text-decoration-none text-secondary"
               >
                 <% if(task.accept === 'pending') { %>
@@ -75,7 +75,7 @@
               <p class="visually-hidden"></p>
               <% } else { %>
               
-              <a href="/sent/<%= task.messagesid %>/response" class="text-decoration-none text-secondary">  
+              <a href="/task/<%= task.messagesid %>/resend" class="text-decoration-none text-secondary">  
 
               <% if(task.accepted === "no" || task.accepted==="accepted") { %>
               <div class="row shadow-sm p-3 mb-3 bg-light rounded border">          

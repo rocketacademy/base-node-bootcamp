@@ -1,15 +1,13 @@
-import req from 'express/lib/request';
 import pool from '../helperfunctions/pool.js';
 import dynamicSort from '../helperfunctions/sorting.js';
 import checkDueDate from '../helperfunctions/checkOverdue.js';
 
 class TaskController {
   constructor(db) {
-    this.db = db;
     this.pool = pool;
   }
 
-  async getPendingCompletedTasks(request, response) {
+  async getAllTasks(request, response) {
     try {
       const { navbar, userId } = request;
       const { pendingSortBy } = request.query;
@@ -34,7 +32,7 @@ class TaskController {
     try {
       const { projId, taskId, taskStatus } = request.query;
 
-      const updateTasks = await this.pool.query(`UPDATE tasks SET status='${taskStatus}' WHERE id=${taskId}`);
+      await this.pool.query(`UPDATE tasks SET status='${taskStatus}' WHERE id=${taskId}`);
       const tasks = await this.pool.query(`SELECT * FROM proj_tasks WHERE proj_id=${projId}`);
       const completed = await this.pool.query(`SELECT * FROM tasks INNER JOIN proj_tasks ON proj_tasks.task_id = tasks.id WHERE proj_tasks.proj_id = ${projId} AND tasks.status = 'completed'`);
       const totalTasks = tasks.rows.length;
@@ -54,7 +52,7 @@ class TaskController {
         progressStatus = 'pending';
       }
 
-      const updateProj = await this.pool.query(`UPDATE proj SET progress = ${progress}, status='${progressStatus}'  WHERE id=${projId}`);
+      await this.pool.query(`UPDATE proj SET progress = ${progress}, status='${progressStatus}'  WHERE id=${projId}`);
       if (request.path === '/tasks/all/completed') {
         response.redirect('/tasks/all');
       } else {
@@ -62,6 +60,68 @@ class TaskController {
       }
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async getAcceptTaskForm(request, response) {
+    try {
+      const { id } = request.params;
+      const { navbar } = request;
+      const accepttasks = await this.pool.query(`SELECT tasks.name, tasks.id AS taskid, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username, users.id, users.email, messages.id AS messagesId, messages.accept, messages.task_id, messages.send_to FROM tasks INNER JOIN messages ON messages.task_id = tasks.id INNER JOIN users ON tasks.created_by= users.id WHERE messages.id= ${id}`);
+      response.render('accepttasks', { task: accepttasks.rows[0], navbar });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async acceptTask(request, response) {
+    try {
+      const messageId = Number(request.params.id);
+      const { accept } = request.body;
+      const messages = await this.pool.query(`SELECT * FROM messages WHERE id=${messageId}`);
+      const taskId = Number(messages.rows[0].task_id);
+      await this.pool.query(`UPDATE tasks SET accepted ='${accept}' WHERE id=${taskId}`);
+      await this.pool.query(`UPDATE messages SET accept='${accept}' WHERE id=${messageId}`);
+      response.redirect('/inbox');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async resendTaskForm(request, response) {
+    try {
+      const { id } = request.params;
+      const { navbar } = request;
+      const resendTasks = await this.pool.query(`SELECT tasks.name, tasks.id AS taskid, tasks.due_date, tasks.accepted, tasks.status, tasks.created_by, users.name AS username, users.id, users.email, messages.id AS messagesId, messages.accept, messages.task_id, messages.send_to FROM messages INNER JOIN tasks ON messages.task_id = tasks.id INNER JOIN users ON users.id= messages.send_to WHERE messages.id= ${id}`);
+      response.render('resendtasks', { task: resendTasks.rows[0], navbar, mailvalid: '' });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async resendTask(request, response) {
+    try {
+      const id = Number(request.params.id);
+      const { navbar } = request;
+      const { sendeeemail } = request.body;
+
+      const users = await this.pool.query(`SELECT * FROM users WHERE email='${sendeeemail}'`);
+      if (users.rows.length === 0) {
+        throw new Error('user does not exist');
+      } else {
+        const receiptID = Number(users.rows[0].id);
+        await this.pool.query(`UPDATE user_tasks SET user_id= ${receiptID} WHERE task_id=${id}`);
+        await this.pool.query(`INSERT INTO messages (send_to, task_id, accept) VALUES ('${receiptID}', '${id}', 'pending')`);
+        await this.pool.query(`UPDATE tasks SET accepted='no' WHERE id=${id}`);
+        response.redirect('/inbox');
+      }
+    } catch (error) {
+      const tasks = await this.pool.query(`SELECT name, id AS taskid, due_date, accepted, status, created_by FROM tasks WHERE id=${id}`);
+      if (error.message === 'user does not exist') {
+        const task = tasks.rows[0];
+        // sends back to the form modal that the email input is invalid
+        response.render('resendtasks', { navbar, task, mailvalid: 'is-invalid' });
+      }
     }
   }
 }
