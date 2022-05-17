@@ -8,14 +8,14 @@ import TaskController from '../controllers/task.controller.js';
 const router = Router();
 const prefix = '/task';
 
-const itemController = new TaskController(pool);
+const taskController = new TaskController(pool);
 
-router.get(`${prefix}s/completed`, authenticate, itemController.changeTaskStatus);
-router.get(`${prefix}s/all`, authenticate, getDetails, itemController.getAllTasks);
-router.get(`${prefix}s/all/completed`, authenticate, itemController.changeTaskStatus);
-router.get(`${prefix}/:id/accept`, authenticate, getDetails, itemController.getAcceptTaskForm);
-router.post(`${prefix}/:id/accept`, authenticate, itemController.acceptTask);
-router.get(`${prefix}/:id/resend`, authenticate, getDetails, itemController.resendTaskForm);
-router.put(`${prefix}/:id/resend`, authenticate, getDetails, itemController.resendTask);
+router.get(`${prefix}s/completed`, authenticate, taskController.changeTaskStatus);
+router.get(`${prefix}s/all`, authenticate, getDetails, taskController.getAllTasks);
+router.get(`${prefix}s/all/completed`, authenticate, taskController.changeTaskStatus);
+router.get(`${prefix}/:id/accept`, authenticate, getDetails, taskController.getAcceptTaskForm);
+router.post(`${prefix}/:id/accept`, authenticate, taskController.acceptTask);
+router.get(`${prefix}/:id/resend`, authenticate, getDetails, taskController.resendTaskForm);
+router.put(`${prefix}/:id/resend`, authenticate, getDetails, taskController.resendTask);
 
 export default router;

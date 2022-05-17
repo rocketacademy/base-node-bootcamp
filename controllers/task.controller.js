@@ -1,9 +1,8 @@
-import pool from '../helperfunctions/pool.js';
 import dynamicSort from '../helperfunctions/sorting.js';
 import checkDueDate from '../helperfunctions/checkOverdue.js';
 
 class TaskController {
-  constructor(db) {
+  constructor(pool) {
     this.pool = pool;
   }
 
