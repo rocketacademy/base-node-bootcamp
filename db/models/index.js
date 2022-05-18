@@ -1,37 +1,58 @@
-'use strict';
+/* eslint-disable comma-dangle */
+import { Sequelize } from 'sequelize';
+import allConfig from '../../sequelize.config.cjs';
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const basename = path.basename(__filename);
+import initFriendModel from './friend.mjs';
+import initMessageModel from './message.mjs';
+import initTaskModel from './task.mjs';
+import initUserModel from './user.mjs';
+import initProjectModel from './project.mjs';
+
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
+const config = allConfig[env];
 const db = {};
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+// initiate a new instance of Sequelize
+const sequelize = new Sequelize(
+  config.database,
+  config.username,
+  config.password,
+  config
+);
 
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
+// here we are putting initModel from model.mjs into the object "db" (line 14)
+db.Friend = initFriendModel(sequelize, Sequelize.DataTypes);
+db.Message = initMessageModel(sequelize, Sequelize.DataTypes);
+db.Task = initTaskModel(sequelize, Sequelize.DataTypes);
+db.User = initUserModel(sequelize, Sequelize.DataTypes);
+db.Project = initProjectModel(sequelize, Sequelize.DataTypes);
 
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
+/** MAIN TABLES */
+/** One to one relationship between A and B with foreign key defined in A. */
+/** One to one relationship between A and B with foreign key defined in B. */
+db.Project.belongsTo(db.User);
+db.User.hasMany(db.Project);
 
+db.Task.belongsTo(db.Project);
+db.Project.hasMany(db.Task);
+
+db.Task.belongsTo(db.User, { as: 'created_by' });
+db.Task.belongsTo(db.User, { as: 'assigned_to' });
+db.User.hasMany(db.Task);
+
+/** JOIN TABLES Relationships */
+db.User.belongsToMany(db.User, { through: 'Users_Friends', as: 'user_id' });
+db.User.belongsToMany(db.User, { through: 'Users_Friends', as: 'user_id' });
+
+db.User.belongsToMany(db.Task, { through: db.Message });
+db.Task.belongsToMany(db.User, { through: db.Message });
+
+db.Task.hasMany(db.Message);
+db.Message.belongsTo(db.Task);
+db.User.hasMany(db.Message);
+db.Message.belongsTo(db.User);
+
+// here we are putting the instance we created in line 28 into the object "db"
 db.sequelize = sequelize;
-db.Sequelize = Sequelize;
 
-module.exports = db;
+export default db;

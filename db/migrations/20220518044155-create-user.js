@@ -96,6 +96,13 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
       },
+      proj_id: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Projects',
+          key: 'id',
+        },
+      },
       created_by: {
         type: Sequelize.INTEGER,
         references: {
@@ -103,40 +110,12 @@ module.exports = {
           key: 'id',
         },
       },
-      created_at: {
-        allowNull: false,
-        type: Sequelize.DATE,
-      },
-      updated_at: {
-        allowNull: false,
-        type: Sequelize.DATE,
-      },
-    });
-
-    await queryInterface.createTable('Projects_Tasks', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
+      assigned_to: {
         type: Sequelize.INTEGER,
-      },
-      created_at: {
-        allowNull: false,
-        type: Sequelize.DATE,
-      },
-      updated_at: {
-        allowNull: false,
-        type: Sequelize.DATE,
-      },
-    });
-
-    // tasks that have been assigned to the task
-    await queryInterface.createTable('Users_Tasks', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
       },
       created_at: {
         allowNull: false,
@@ -217,8 +196,6 @@ module.exports = {
     await queryInterface.dropTable('Users');
     await queryInterface.dropTable('Projects');
     await queryInterface.dropTable('Tasks');
-    await queryInterface.dropTable('Projects_Tasks');
-    await queryInterface.dropTable('Users_Tasks');
     await queryInterface.dropTable('Users_Friends');
     await queryInterface.dropTable('Messages');
   },

@@ -1,6 +1,6 @@
-export default function initFriendModel(sequelize, DataTypes) {
+export default function initTaskModel(sequelize, DataTypes) {
   return sequelize.define(
-    'user_friend',
+    'task',
     {
       id: {
         allowNull: false,
@@ -8,14 +8,26 @@ export default function initFriendModel(sequelize, DataTypes) {
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      user_id: {
+      name: {
+        type: DataTypes.STRING,
+      },
+      accepted: {
+        type: DataTypes.STRING,
+      },
+      due_date: {
+        type: DataTypes.STRING,
+      },
+      status: {
+        type: DataTypes.STRING,
+      },
+      created_by: {
         type: DataTypes.INTEGER,
         references: {
           model: 'Users',
           key: 'id',
         },
       },
-      friend_id: {
+      assigned_to: {
         type: DataTypes.INTEGER,
         references: {
           model: 'Users',
