@@ -4,6 +4,7 @@ import methodOverride from 'method-override';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import pool from './helperfunctions/pool.js';
 
 import AuthRouter from './routes/authenticate.routes.js';
 import ProjectRouter from './routes/project.routes.js';

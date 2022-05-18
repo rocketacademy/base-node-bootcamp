@@ -8,7 +8,6 @@ import ProjectController from '../controllers/allprojects.controller.js';
 
 const router = Router();
 const prefix = '/projects';
-console.log(pool);
 
 const projectController = new ProjectController(pool);
 
