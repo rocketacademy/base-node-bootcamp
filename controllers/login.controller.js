@@ -1,16 +1,16 @@
-import pool from '../helperfunctions/pool.js';
+/* eslint-disable class-methods-use-this */
+
+import cookieParser from 'cookie-parser';
 import getHash from '../helperfunctions/hashsession.js';
 import { validateForm } from '../helperfunctions/formvalidation.js';
 
 class LoginController {
-  constructor(db) {
-    this.db = db;
+  constructor(pool) {
     this.pool = pool;
   }
 
   async getLogin(request, response) {
     try {
-      await this.pool.query('SELECT * FROM users');
       const validate = validateForm('', '', 'Enter valid password', 'Enter valid email');
       response.render('login', validate);
     } catch (error) {
@@ -21,7 +21,9 @@ class LoginController {
   async loginUser(request, response) {
     try {
       const user = { ...request.body };
+      console.log(user);
       const checkEmail = await this.pool.query(`SELECT * FROM users WHERE email='${user.email}'`);
+      console.log('check', checkEmail);
 
       if (checkEmail.rows.length === 0) {
         throw new Error('email does not exist');
@@ -43,16 +45,18 @@ class LoginController {
       let validate;
       if (error.message === 'email does not exist') {
         validate = validateForm('is-invalid', '', 'Enter valid password', 'Email does not exists! Please sign up');
+        response.render('login', validate);
       } else if (error.message === 'incorrect password') {
         validate = validateForm('is-valid', 'is-invalid', 'Wrong Password', '');
+        response.render('login', validate);
+      } else {
+        console.log(error);
       }
-      response.render('login', validate);
     }
   }
 
   async logoutUser(request, response) {
     try {
-      const user = await this.pool.query('SELECT * FROM users');
       response.clearCookie('username');
       response.clearCookie('userId');
       response.clearCookie('hashedSession');

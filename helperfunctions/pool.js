@@ -25,6 +25,4 @@ if (process.env.DATABASE_URL) {
 }
 const pool = new Pool(pgConnectionConfigs);
 
-// ...
-
 export default pool;

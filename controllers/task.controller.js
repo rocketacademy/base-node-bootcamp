@@ -99,11 +99,10 @@ class TaskController {
   }
 
   async resendTask(request, response) {
+    const { navbar } = request;
+    const id = Number(request.params.id);
     try {
-      const id = Number(request.params.id);
-      const { navbar } = request;
       const { sendeeemail } = request.body;
-
       const users = await this.pool.query(`SELECT * FROM users WHERE email='${sendeeemail}'`);
       if (users.rows.length === 0) {
         throw new Error('user does not exist');

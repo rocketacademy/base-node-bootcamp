@@ -1,10 +1,8 @@
-import pool from '../helperfunctions/pool.js';
 import getHash from '../helperfunctions/hashsession.js';
 import { validateForm } from '../helperfunctions/formvalidation.js';
 
 class SignupController {
-  constructor(db) {
-    this.db = db;
+  constructor(pool) {
     this.pool = pool;
   }
 

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+
 import authenticate from '../helperfunctions/authenticate.js';
 import getDetails from '../helperfunctions/userdetails.js';
 import pool from '../helperfunctions/pool.js';
@@ -7,6 +8,7 @@ import ProjectController from '../controllers/allprojects.controller.js';
 
 const router = Router();
 const prefix = '/projects';
+console.log(pool);
 
 const projectController = new ProjectController(pool);
 

@@ -1,3 +1,6 @@
+/* eslint-disable comma-dangle */
+/* eslint-disable import/extensions */
+
 import { Router } from 'express';
 import pool from '../helperfunctions/pool.js';
 
@@ -10,7 +13,6 @@ const prefix = '/signup';
 const loginController = new LoginController(pool);
 const signupController = new SignupController(pool);
 
-// router.get(`${prefix}`, authenticate, getDetails, authenticateController.getUserProjects);
 router.get('/', loginController.getLogin);
 router.post('/', loginController.loginUser);
 router.post('/logout', loginController.logoutUser);

@@ -3,9 +3,7 @@ import express from 'express';
 import moment from 'moment';
 import methodOverride from 'method-override';
 import cookieParser from 'cookie-parser';
-import aws from 'aws-sdk';
-import multer from 'multer';
-import multerS3 from 'multer-s3';
+
 import dotenv from 'dotenv';
 import path from 'path';
 import pool from './helperfunctions/pool.js';
@@ -36,12 +34,6 @@ const PORT = process.env.PORT || 3004;
 const envFilePath = '.env';
 dotenv.config({ path: path.normalize(envFilePath) });
 
-// Initialise the S3 SDK with our secret keys from environment variables.
-const s3 = new aws.S3({
-  accessKeyId: process.env.ACCESSKEYID,
-  secretAccessKey: process.env.SECRETACCESSKEY,
-});
-
 app.set('view engine', 'ejs');
 app.use(methodOverride('_method'));
 // Add express.static config to allow Express to serve files from public folder
@@ -50,21 +42,6 @@ app.use(express.static('public'));
 app.use(express.static('uploads'));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-
-// Initialise the Multer SDK with multerS3.
-const multerUpload = multer({
-  storage: multerS3({
-    s3,
-    bucket: 'collab',
-    acl: 'public-read',
-    metadata: (request, file, callback) => {
-      callback(null, { fieldName: file.fieldname });
-    },
-    key: (request, file, callback) => {
-      callback(null, Date.now().toString());
-    },
-  }),
-});
 
 // EJS PAGES
 // Log in page

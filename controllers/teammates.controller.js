@@ -1,8 +1,5 @@
-import pool from '../helperfunctions/pool.js';
-
 class FriendController {
-  constructor(db) {
-    this.db = db;
+  constructor(pool) {
     this.pool = pool;
   }
 
