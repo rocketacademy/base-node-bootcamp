@@ -13,9 +13,11 @@ export default function initUserModel(sequelize, DataTypes) {
       },
       email: {
         type: DataTypes.STRING,
+        allowNull: false,
       },
       password: {
         type: DataTypes.STRING,
+        allowNull: false,
       },
       contact: {
         type: DataTypes.STRING,

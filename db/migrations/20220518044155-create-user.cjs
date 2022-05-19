@@ -193,10 +193,10 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Users');
-    await queryInterface.dropTable('Projects');
-    await queryInterface.dropTable('Tasks');
     await queryInterface.dropTable('Users_Friends');
     await queryInterface.dropTable('Messages');
+    await queryInterface.dropTable('Tasks');
+    await queryInterface.dropTable('Projects');
+    await queryInterface.dropTable('Users');
   },
 };

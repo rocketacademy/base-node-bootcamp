@@ -5,7 +5,6 @@ const checkDueDate = (array) => {
     const dueDate = task.due_date;
     const checkforOverDue = moment().isAfter(dueDate);
     const checkforDue = moment().isSame(dueDate);
-    console.log(checkforDue, checkforOverDue);
 
     if (checkforOverDue === true) {
       task.due = 'Overdue';

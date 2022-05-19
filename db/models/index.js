@@ -2,7 +2,6 @@
 import { Sequelize } from 'sequelize';
 import allConfig from '../../sequelize.config.cjs';
 
-import initFriendModel from './friend.mjs';
 import initMessageModel from './message.mjs';
 import initTaskModel from './task.mjs';
 import initUserModel from './user.mjs';
@@ -21,7 +20,6 @@ const sequelize = new Sequelize(
 );
 
 // here we are putting initModel from model.mjs into the object "db" (line 14)
-db.Friend = initFriendModel(sequelize, Sequelize.DataTypes);
 db.Message = initMessageModel(sequelize, Sequelize.DataTypes);
 db.Task = initTaskModel(sequelize, Sequelize.DataTypes);
 db.User = initUserModel(sequelize, Sequelize.DataTypes);
@@ -36,13 +34,13 @@ db.User.hasMany(db.Project);
 db.Task.belongsTo(db.Project);
 db.Project.hasMany(db.Task);
 
-db.Task.belongsTo(db.User, { as: 'created_by' });
-db.Task.belongsTo(db.User, { as: 'assigned_to' });
+db.Task.belongsTo(db.User, { as: 'sentBy', foreignKey: 'created_by' });
+db.Task.belongsTo(db.User, { as: 'receivedBy', foreignKey: 'assigned_to' });
 db.User.hasMany(db.Task);
 
 /** JOIN TABLES Relationships */
-db.User.belongsToMany(db.User, { through: 'Users_Friends', as: 'user_id' });
-db.User.belongsToMany(db.User, { through: 'Users_Friends', as: 'user_id' });
+db.User.belongsToMany(db.User, { through: 'Users_Friends', as: 'user', foreignKey: 'user_id' });
+db.User.belongsToMany(db.User, { through: 'Users_Friends', as: 'friend', foreignKey: 'friend_id' });
 
 db.User.belongsToMany(db.Task, { through: db.Message });
 db.Task.belongsToMany(db.User, { through: db.Message });
@@ -54,5 +52,6 @@ db.Message.belongsTo(db.User);
 
 // here we are putting the instance we created in line 28 into the object "db"
 db.sequelize = sequelize;
+db.Sequelize = Sequelize;
 
 export default db;

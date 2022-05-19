@@ -20,6 +20,13 @@ export default function initTaskModel(sequelize, DataTypes) {
       status: {
         type: DataTypes.STRING,
       },
+      proj_id: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'Projects',
+          key: 'id',
+        },
+      },
       created_by: {
         type: DataTypes.INTEGER,
         references: {

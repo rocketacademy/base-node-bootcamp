@@ -1,5 +1,4 @@
 /* eslint-disable class-methods-use-this */
-
 import cookieParser from 'cookie-parser';
 import getHash from '../helperfunctions/hashsession.js';
 import { validateForm } from '../helperfunctions/formvalidation.js';
@@ -9,7 +8,7 @@ class LoginController {
     this.pool = pool;
   }
 
-  async getLogin(request, response) {
+  getLogin = async (request, response) => {
     try {
       const validate = validateForm('', '', 'Enter valid password', 'Enter valid email');
       response.render('login', validate);
@@ -18,10 +17,9 @@ class LoginController {
     }
   }
 
-  async loginUser(request, response) {
+  loginUser = async (request, response) => {
     try {
       const user = { ...request.body };
-      console.log(user);
       const checkEmail = await this.pool.query(`SELECT * FROM users WHERE email='${user.email}'`);
       console.log('check', checkEmail);
 
@@ -55,7 +53,7 @@ class LoginController {
     }
   }
 
-  async logoutUser(request, response) {
+  logoutUser = async (request, response) => {
     try {
       response.clearCookie('username');
       response.clearCookie('userId');

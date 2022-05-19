@@ -6,7 +6,7 @@ class InboxController {
     this.pool = pool;
   }
 
-  async getInbox(request, response) {
+  getInbox = async (request, response) => {
     try {
       const { navbar, userId } = request;
       const { sortBy } = request.query;

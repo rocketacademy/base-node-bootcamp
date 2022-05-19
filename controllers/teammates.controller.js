@@ -3,7 +3,7 @@ class FriendController {
     this.pool = pool;
   }
 
-  async getAllTeammates(request, response) {
+  getAllTeammates = async (request, response) => {
     try {
       const { navbar, userId } = request;
       const friends = await this.pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`);
@@ -15,7 +15,7 @@ class FriendController {
     }
   }
 
-  async addTeammate(request, response) {
+  addTeammate = async (request, response) => {
     const { navbar, userId } = request;
     const user = request.body;
     try {
@@ -45,7 +45,7 @@ class FriendController {
     }
   }
 
-  async deleteTeammates(request, response) {
+  deleteTeammates = async (request, response) => {
     try {
       const { userId } = request;
       const friendId = Number(request.params.id);

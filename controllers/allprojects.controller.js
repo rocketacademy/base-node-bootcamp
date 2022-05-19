@@ -1,4 +1,5 @@
 import moment from 'moment';
+
 import dynamicSort from '../helperfunctions/sorting.js';
 import { sliceIntoChunks, sliceForEdit } from '../helperfunctions/subtaskhandler.js';
 import { createEmpty } from '../helperfunctions/formvalidation.js';
@@ -8,7 +9,7 @@ class ProjectController {
     this.pool = pool;
   }
 
-  async addProjectForm(request, response) {
+  addProjectForm = async (request, response) => {
     try {
       const { navbar, userId } = request;
       const friends = await this.pool.query(`SELECT * FROM users INNER JOIN friends ON users.id = friends.friend_id WHERE friends.user_id=${userId}`);
@@ -18,7 +19,7 @@ class ProjectController {
     }
   }
 
-  async addProject(request, response) {
+  addProject = async (request, response) => {
     try {
       const { navbar, userId } = request;
       const user = request.body;
@@ -57,7 +58,7 @@ class ProjectController {
     }
   }
 
-  async getUserProjects(request, response) {
+  getUserProjects = async (request, response) => {
     try {
       const { navbar, userId } = request;
       const { completedSortBy } = request.query;
@@ -72,7 +73,7 @@ class ProjectController {
     }
   }
 
-  async editProjectForm(request, response) {
+  editProjectForm = async (request, response) => {
     try {
       const projId = Number(request.params.id);
       const { navbar } = request;
@@ -96,7 +97,7 @@ class ProjectController {
     }
   }
 
-  async editProject(request, response) {
+  editProject = async (request, response) => {
     try {
       const { userId } = request;
       const user = request.body;
@@ -130,7 +131,7 @@ class ProjectController {
     }
   }
 
-  async deleteProject(request, response) {
+  deleteProject= async (request, response) => {
     try {
       const projId = Number(request.params.id);
       const projTasks = await this.pool.query(`SELECT * FROM proj_tasks WHERE proj_id = ${projId}`);
@@ -149,7 +150,7 @@ class ProjectController {
     }
   }
 
-  async getOneUserProject(request, response) {
+  getOneUserProject = async (request, response) => {
     try {
       const projId = Number(request.params.id);
       const { navbar } = request;

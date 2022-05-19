@@ -3,7 +3,7 @@ class ProfileController {
     this.pool = pool;
   }
 
-  async getProfile(request, response) {
+  getProfile = async (request, response) => {
     try {
       const { navbar, userId } = request;
       const user = await this.pool.query(`SELECT * FROM users WHERE id=${userId}`);
@@ -13,7 +13,7 @@ class ProfileController {
     }
   }
 
-  async uploadUserPhoto(request, response) {
+  uploadUserPhoto = async (request, response) => {
     try {
       const userId = Number(request.params.id);
       await this.pool.query(`UPDATE users SET photo='${request.file.location}' WHERE id=${userId}`);
@@ -23,7 +23,7 @@ class ProfileController {
     }
   }
 
-  async editProfile(request, response) {
+  editProfile = async (request, response) => {
     try {
       const userId = Number(request.params.id);
       const user = request.body;

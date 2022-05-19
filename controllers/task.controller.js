@@ -6,7 +6,7 @@ class TaskController {
     this.pool = pool;
   }
 
-  async getAllTasks(request, response) {
+  getAllTasks = async (request, response) => {
     try {
       const { navbar, userId } = request;
       const { pendingSortBy } = request.query;
@@ -27,7 +27,7 @@ class TaskController {
     }
   }
 
-  async changeTaskStatus(request, response) {
+  changeTaskStatus = async (request, response) => {
     try {
       const { projId, taskId, taskStatus } = request.query;
 
@@ -62,7 +62,7 @@ class TaskController {
     }
   }
 
-  async getAcceptTaskForm(request, response) {
+  getAcceptTaskForm = async (request, response) => {
     try {
       const { id } = request.params;
       const { navbar } = request;
@@ -73,7 +73,7 @@ class TaskController {
     }
   }
 
-  async acceptTask(request, response) {
+  acceptTask = async (request, response) => {
     try {
       const messageId = Number(request.params.id);
       const { accept } = request.body;
@@ -87,7 +87,7 @@ class TaskController {
     }
   }
 
-  async resendTaskForm(request, response) {
+  resendTaskForm = async (request, response) => {
     try {
       const { id } = request.params;
       const { navbar } = request;
@@ -98,7 +98,7 @@ class TaskController {
     }
   }
 
-  async resendTask(request, response) {
+  resendTask = async (request, response) => {
     const { navbar } = request;
     const id = Number(request.params.id);
     try {

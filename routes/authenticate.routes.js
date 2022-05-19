@@ -15,7 +15,7 @@ const signupController = new SignupController(pool);
 
 router.get('/', loginController.getLogin);
 router.post('/', loginController.loginUser);
-router.post('/logout', loginController.logoutUser);
+router.get('/logout', loginController.logoutUser);
 router.get(`${prefix}`, signupController.getSignupForm);
 router.post(`${prefix}`, signupController.signupUser);
 

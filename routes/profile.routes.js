@@ -12,7 +12,7 @@ import pool from '../helperfunctions/pool.js';
 import ProfileController from '../controllers/profile.controller.js';
 
 // configure env variables
-const envFilePath = '../.env';
+const envFilePath = '.env';
 dotenv.config({ path: path.normalize(envFilePath) });
 
 // Initialise the S3 SDK with our secret keys from environment variables.

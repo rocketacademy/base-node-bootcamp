@@ -6,7 +6,7 @@ class SignupController {
     this.pool = pool;
   }
 
-  async getSignupForm(request, response) {
+  getSignupForm = async (request, response) => {
     try {
       await this.pool.query('SELECT * FROM users');
       const validate = validateForm('', '', 'Enter valid password', 'Enter valid email');
@@ -16,7 +16,7 @@ class SignupController {
     }
   }
 
-  async signupUser(request, response) {
+  signupUser = async (request, response) => {
     try {
       const user = { ...request.body };
       const checkEmail = await this.pool.query(`SELECT * FROM users WHERE email='${user.email}'`);
